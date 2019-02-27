@@ -1,0 +1,4 @@
+﻿  Building Custom Rule C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/libigl/external/glad/CMakeLists.txt
+  CMake does not need to re-run because C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/glad/CMakeFiles/generate.stamp is up-to-date.
+  glad.c
+  glad.vcxproj -> C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\glad\Release\glad.lib
