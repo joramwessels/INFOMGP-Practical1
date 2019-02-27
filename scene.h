@@ -22,6 +22,16 @@ void center(const void *_obj, ccd_vec3_t *dir);
 //Impulse is defined as a pair <position, direction>
 typedef std::pair<RowVector3d,RowVector3d> Impulse;
 
+RowVector4d quaternionMultiplication(const double& rp, const RowVector3d& vp, const double& rq, const RowVector3d& vq) {
+	Vector3d new_vec(rq*vp + rp*vq + vp.cross(vq));
+	return RowVector4d(rp*rq - vp.dot(vq), new_vec[0], new_vec[1], new_vec[2]);
+}
+
+RowVector4d quaternionMultiplication(const RowVector4d& p, const RowVector4d& q) {
+	double rp = p[0], rq = q[0];
+	Vector3d vp(p[1], p[2], p[3]), vq(q[1], q[2], q[3]);
+	return quaternionMultiplication(rp, vp, rq, vq);
+}
 
 //the class the contains each individual rigid objects and their functionality
 class Mesh{
@@ -139,13 +149,32 @@ public:
   //Update the current position and orientation by integrating the linear and angular velocities, and update currV accordingly
   //You need to modify this according to its purpose
   void updatePosition(double timeStep){
+	  cout << currImpulses.size() << endl;
+
     //just forward Euler now
     if (isFixed)
       return;  //a fixed object is immobile
-    
-    /***************
-     TODO
-     ***************/
+
+	// integrating linear volcity
+	COM += comVelocity * timeStep;
+	int triPosCount = currV.rows();
+	for (int i = 0; i < triPosCount; i++)
+	{
+		currV(i, 0) += comVelocity(0) * timeStep;
+		currV(i, 1) += comVelocity(1) * timeStep;
+		currV(i, 2) += comVelocity(2) * timeStep;
+	}
+
+	// integrating angular velocity
+	Quaterniond ori = Quaterniond(0.0, angVelocity(0), angVelocity(1), angVelocity(2)) * Quaterniond(orientation.data());
+	orientation += .5 * timeStep * RowVector4d(ori.w(), ori.vec()(0), ori.vec()(1), ori.vec()(2));
+	for (int i = 0; i < triPosCount; i++)
+	{
+		Quaterniond rot = ori * Quaterniond(0, currV(i, 0), currV(i, 1), currV(i, 2)) * ori.inverse();
+		currV(i, 0) += .5 * timeStep * rot.vec()(0);
+		currV(i, 1) += .5 * timeStep * rot.vec()(1);
+		currV(i, 2) += .5 * timeStep * rot.vec()(2);
+	}
     
     for (int i=0;i<currV.rows();i++)
       currV.row(i)<<QRot(origV.row(i), orientation)+COM;
@@ -163,10 +192,19 @@ public:
       return;
     }
     
-    //update linear and angular velocity according to all impulses
-    /***************
-     TODO
-     ***************/
+	//updating linear and angular velocity according to all impulses
+	RowVector3d force, torque, r;
+	int forceCount = currImpulses.size();
+	for (int i = 0; i < forceCount; i++)
+	{
+		r = (currImpulses[i].first - COM);            // COM to origin of force
+		force = currImpulses[i].second;                // just the direction
+		torque = r.cross(currImpulses[i].second);    // r x F
+		comVelocity += (force / totalMass);
+		angVelocity += (torque * invIT);            // torque is a row vector
+	}
+
+	currImpulses.clear();
   }
   
   RowVector3d initStaticProperties(const double density)
@@ -312,40 +350,28 @@ public:
    *********************************************************************/
   void handleCollision(Mesh& m1, Mesh& m2,const double& depth, const RowVector3d& contactNormal,const RowVector3d& penPosition, const double CRCoeff){
     
-    
     std::cout<<"contactNormal: "<<contactNormal<<std::endl;
     std::cout<<"penPosition: "<<penPosition<<std::endl;
     //std::cout<<"handleCollision begin"<<std::endl;
     
-    
     //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
     RowVector3d contactPosition;
     if (m1.isFixed){
-      /***************
-       TODO
-       ***************/
+		contactPosition = penPosition;
     } else if (m2.isFixed){
-      /***************
-       TODO
-       ***************/
+		contactPosition = penPosition - depth * contactNormal;
     } else { //inverse mass weighting
-      /***************
-       TODO
-       ***************/
+		contactPosition = penPosition - depth * contactNormal / m1.totalMass;
     }
     
+	float j = -(1 + CRCoeff) * contactNormal.dot(m1.comVelocity - m2.comVelocity) / (1/m1.totalMass + 1/m2.totalMass);
     
-    //Create impulse and push them into m1.impulses and m2.impulses.
-    /***************
-     TODO
-     ***************/
-    
-    RowVector3d impulse=RowVector3d::Zero();  //change this to your result
+    RowVector3d impulse = j * contactNormal;  //change this to your result
     
     std::cout<<"impulse: "<<impulse<<std::endl;
     if (impulse.norm()>10e-6){
-      m1.currImpulses.push_back(Impulse(contactPosition, -impulse));
-      m2.currImpulses.push_back(Impulse(contactPosition, impulse));
+      m1.currImpulses.push_back(Impulse(contactPosition, impulse));
+      m2.currImpulses.push_back(Impulse(contactPosition, -impulse));
     }
     
     //std::cout<<"handleCollision end"<<std::endl;
