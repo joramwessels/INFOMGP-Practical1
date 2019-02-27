@@ -138,11 +138,7 @@ public:
   Matrix3d getCurrInvInertiaTensor(){
     Matrix3d R=Q2RotMatrix(orientation);
     
-    /***************
-     TODO
-     ***************/
-    
-    return Matrix3d::Identity(3,3);  //change this to your result
+	return R.transpose() * invIT * R;
   }
   
   
