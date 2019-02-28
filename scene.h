@@ -128,24 +128,23 @@ public:
   Matrix3d getCurrInvInertiaTensor()
   {
 	  Matrix3d R=Q2RotMatrix(orientation);
-	  return R.transpose() * invIT * R;
+	  Matrix3d IT = invIT.inverse();
+	  return (R.transpose() * IT * R).inverse();
   }
   
   
   //Update the current position and orientation by integrating the linear and angular velocities, and update currV accordingly
   //You need to modify this according to its purpose
-  void updatePosition(double timeStep){
-    //just forward Euler now
-    if (isFixed)
-      return;  //a fixed object is immobile
+  void updatePosition(double timeStep)
+  {
+    if (isFixed) return;  //a fixed object is immobile
     
 	// integrating linear volcity
 	COM += comVelocity * timeStep;
-	int triPosCount = currV.rows();
 
 	// integrating angular velocity
-	Quaterniond ori = Quaterniond(0.0, angVelocity(0), angVelocity(1), angVelocity(2)) * Quaterniond(orientation.data());
-	orientation += .5 * timeStep * RowVector4d(ori.w(), ori.vec()(0), ori.vec()(1), ori.vec()(2));
+	RowVector4d omega = RowVector4d(0.0, angVelocity(0), angVelocity(1), angVelocity(2));
+	orientation += .5 * timeStep * QMult(omega, orientation);
     
 	// apply to all triangles
     for (int i=0;i<currV.rows();i++)
@@ -166,14 +165,15 @@ public:
     
     //updating linear and angular velocity according to all impulses
 	RowVector3d force, torque, r;
+	Matrix3d currInvIT = getCurrInvInertiaTensor().transpose(); // TODO Is it row or col based?
 	int forceCount = currImpulses.size();
 	for (int i = 0; i < forceCount; i++)
 	{
-		r = (currImpulses[i].first - COM);			// COM to origin of force
-		force = currImpulses[i].second;				// just the direction
-		torque = r.cross(currImpulses[i].second);	// r x F
-		comVelocity += (force / totalMass);
-		angVelocity += (torque * getCurrInvInertiaTensor()); // torque is a row vector
+		r = (currImpulses[i].first - COM);			// radius (COM to origin of force)
+		force = currImpulses[i].second;				// F (just the direction)
+		torque = r.cross(currImpulses[i].second);	// t = r x F
+		comVelocity += (force / totalMass);			// a = F / m
+		angVelocity += (torque * currInvIT);		// alpha = (t^T)I^{-1 T} (torque is a row vector)
 	}
 	currImpulses.clear();
   }
