@@ -337,6 +337,13 @@ public:
 		  contactPosition = penPosition - depth * contactNormal / m1.totalMass;
 	  }
 
+	  RowVector3d positionCorrection1 = contactPosition - penPosition, positionCorrection2 = depth * contactNormal - positionCorrection1;
+
+	  for (int i = 0; i < m1.currV.rows(); i++)
+		  m1.currV.row(i) += positionCorrection1;
+	  for (int i = 0; i < m2.currV.rows(); i++)
+		  m2.currV.row(i) += positionCorrection2;
+
 	  float j = -(1 + CRCoeff) * contactNormal.dot(m1.comVelocity - m2.comVelocity) / (1 / m1.totalMass + 1 / m2.totalMass);
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
