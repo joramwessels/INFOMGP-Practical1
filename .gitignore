@@ -1,1 +1,9 @@
 .vs
+x64/
+Debug/
+imgui/
+CMakeFiles/
+Practical1_bin.dir/Debug/
+glad/glad.dir/Debug/
+glfw/src/glfw.dir/Debug/
+imgui/imgui.dir/Debug/
