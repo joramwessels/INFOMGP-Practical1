@@ -128,8 +128,7 @@ public:
   Matrix3d getCurrInvInertiaTensor()
   {
 	  Matrix3d R=Q2RotMatrix(orientation);
-	  //return R.transpose() * invIT * R;
-	  return Matrix3d::Identity(3, 3);
+	  return R.transpose() * invIT * R;
   }
   
   
@@ -143,24 +142,12 @@ public:
 	// integrating linear volcity
 	COM += comVelocity * timeStep;
 	int triPosCount = currV.rows();
-	//for (int i = 0; i < triPosCount; i++)
-	//{
-	//	currV(i, 0) += comVelocity(0) * timeStep;
-	//	currV(i, 1) += comVelocity(1) * timeStep;
-	//	currV(i, 2) += comVelocity(2) * timeStep;
-	//}
 
 	// integrating angular velocity
 	Quaterniond ori = Quaterniond(0.0, angVelocity(0), angVelocity(1), angVelocity(2)) * Quaterniond(orientation.data());
 	orientation += .5 * timeStep * RowVector4d(ori.w(), ori.vec()(0), ori.vec()(1), ori.vec()(2));
-	//for (int i = 0; i < triPosCount; i++)
-	//{
-	//	Quaterniond rot = ori * Quaterniond(0, currV(i, 0), currV(i, 1), currV(i, 2)) * ori.inverse();
-	//	currV(i, 0) += .5 * timeStep * rot.vec()(0);
-	//	currV(i, 1) += .5 * timeStep * rot.vec()(1);
-	//	currV(i, 2) += .5 * timeStep * rot.vec()(2);
-	//}
     
+	// apply to all triangles
     for (int i=0;i<currV.rows();i++)
       currV.row(i)<<QRot(origV.row(i), orientation)+COM;
   }
