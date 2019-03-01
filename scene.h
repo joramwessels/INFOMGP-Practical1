@@ -327,7 +327,7 @@ public:
 
 	  //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
 	  RowVector3d contactPosition, posCorrection1, posCorrection2;
-	  double m2MoveBack;
+	  double m2MoveBack, collisionSpeed, j, jitterTolerance = 0.001;
 	  if (m1.isFixed) {
 		  m2MoveBack =  depth;
 	  }
@@ -356,9 +356,14 @@ public:
 	  Vector3d totalClosingVelocity2 = m2.comVelocity + m2.angVelocity.cross(r2);
 	  Vector3d r1crossn = r1.cross(contactNormal);
 	  Vector3d r2crossn = r2.cross(contactNormal);
+	  
+	  collisionSpeed = (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal);
+	  if (collisionSpeed < jitterTolerance) return;
 
 	  //float j = (1 + CRCoeff) * (m1.comVelocity - m2.comVelocity).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass));
-	  float j = (1 + CRCoeff) * (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass) 
+	  //float j = (1 + CRCoeff) * (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass) 
+		//  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+	  float j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) 
 		  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
