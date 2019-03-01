@@ -328,7 +328,7 @@ public:
 
 	  //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
 	  RowVector3d contactPosition, posCorrection1, posCorrection2;
-	  double m2MoveBack;
+	  double m2MoveBack, collisionSpeed, j, jitterTolerance = 0.001;
 	  if (m1.isFixed) {
 		  m2MoveBack =  depth;
 	  }
@@ -347,7 +347,9 @@ public:
 	  for (int i = 0; i < m1.currV.rows(); i++) m1.currV.row(i) += posCorrection1;
 	  for (int i = 0; i < m2.currV.rows(); i++) m2.currV.row(i) += posCorrection2;
 
-	  float j = (1 + CRCoeff) * (m1.comVelocity - m2.comVelocity).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass));
+	  collisionSpeed = (m1.comVelocity - m2.comVelocity).dot(contactNormal);
+	  if (collisionSpeed < jitterTolerance) return;
+	  j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass));
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
 
