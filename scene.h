@@ -130,6 +130,7 @@ public:
 	  Matrix3d R=Q2RotMatrix(orientation);
 	  Matrix3d IT = invIT.inverse();
 	  return (R.transpose() * IT * R).inverse();
+	  //return R.transpose() * invIT * R;
   }
   
   
@@ -165,7 +166,7 @@ public:
     
     //updating linear and angular velocity according to all impulses
 	RowVector3d force, torque, r;
-	Matrix3d currInvIT = getCurrInvInertiaTensor().transpose(); // TODO Is it row or col based?
+	Matrix3d currInvIT = getCurrInvInertiaTensor();
 	int forceCount = currImpulses.size();
 	for (int i = 0; i < forceCount; i++)
 	{
@@ -173,7 +174,7 @@ public:
 		force = currImpulses[i].second;				// F (just the direction)
 		torque = r.cross(currImpulses[i].second);	// t = r x F
 		comVelocity += (force / totalMass);			// a = F / m
-		angVelocity += (torque * currInvIT);		// alpha = (t^T)I^{-1 T} (torque is a row vector)
+		angVelocity += (torque * currInvIT);		// alpha = (t^T)I^-1 (torque is a row vector)
 	}
 	currImpulses.clear();
   }
@@ -321,37 +322,39 @@ public:
    *********************************************************************/
   void handleCollision(Mesh& m1, Mesh& m2, const double& depth, const RowVector3d& contactNormal, const RowVector3d& penPosition, const double CRCoeff) {
 
-	  std::cout << "contactNormal: " << contactNormal << std::endl;
-	  std::cout << "penPosition: " << penPosition << std::endl;
+	  //std::cout << "contactNormal: " << contactNormal << std::endl;
+	  //std::cout << "penPosition: " << penPosition << std::endl;
 	  //std::cout<<"handleCollision begin"<<std::endl;
 
 	  //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
-	  RowVector3d contactPosition;
+	  RowVector3d contactPosition, posCorrection1, posCorrection2;
+	  double m2MoveBack;
 	  if (m1.isFixed) {
-		  contactPosition = penPosition;
+		  m2MoveBack =  depth;
 	  }
 	  else if (m2.isFixed) {
-		  contactPosition = penPosition - depth * contactNormal;
+		  m2MoveBack = 0;
 	  }
 	  else { //inverse mass weighting
-		  contactPosition = penPosition - depth * contactNormal / m1.totalMass;
+		  m2MoveBack = depth * (m1.totalMass / (m1.totalMass + m2.totalMass));
 	  }
+	  posCorrection1 = contactNormal * -(depth - m2MoveBack);
+	  posCorrection2 = contactNormal * m2MoveBack;
+	  contactPosition = penPosition + posCorrection2;
 
-	  RowVector3d positionCorrection1 = contactPosition - penPosition, positionCorrection2 = depth * contactNormal - positionCorrection1;
+	  m1.COM += posCorrection1;
+	  m2.COM += posCorrection2;
+	  for (int i = 0; i < m1.currV.rows(); i++) m1.currV.row(i) += posCorrection1;
+	  for (int i = 0; i < m2.currV.rows(); i++) m2.currV.row(i) += posCorrection2;
 
-	  for (int i = 0; i < m1.currV.rows(); i++)
-		  m1.currV.row(i) += positionCorrection1;
-	  for (int i = 0; i < m2.currV.rows(); i++)
-		  m2.currV.row(i) += positionCorrection2;
-
-	  float j = -(1 + CRCoeff) * contactNormal.dot(m1.comVelocity - m2.comVelocity) / (1 / m1.totalMass + 1 / m2.totalMass);
+	  float j = (1 + CRCoeff) * (m1.comVelocity - m2.comVelocity).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass));
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
 
-	  std::cout << "impulse: " << impulse << std::endl;
+	  //std::cout << "impulse: " << impulse << std::endl;
 	  if (impulse.norm()>10e-6) {
-		  m1.currImpulses.push_back(Impulse(contactPosition, impulse));
-		  m2.currImpulses.push_back(Impulse(contactPosition, -impulse));
+		  m1.currImpulses.push_back(Impulse(contactPosition, -impulse));
+		  m2.currImpulses.push_back(Impulse(contactPosition, impulse));
 	  }
 
 	  //std::cout<<"handleCollision end"<<std::endl;
@@ -381,8 +384,26 @@ public:
     RowVector3d contactNormal, penPosition;
     for (int i=0;i<meshes.size();i++)
       for (int j=i+1;j<meshes.size();j++)
-        if (meshes[i].isCollide(meshes[j],depth, contactNormal, penPosition))
-          handleCollision(meshes[i], meshes[j],depth, contactNormal, penPosition,CRCoeff);
+        if (meshes[i].isCollide(meshes[j], depth, contactNormal, penPosition))
+          handleCollision(meshes[i], meshes[j], depth, contactNormal, penPosition, CRCoeff);
+
+	//int checkingDistance = 30, loop = 0, maxloops = 500;
+	//for (int i = 0; i < meshes.size(); i++) for (int j = i + 1; j < meshes.size(); j++) {
+	//	if ((meshes[i].COM - meshes[j].COM).norm() > checkingDistance) continue;
+	//	if (meshes[i].comVelocity.norm() < 0.0001 && meshes[i].angVelocity.norm() < 0.001 &&
+	//		meshes[j].comVelocity.norm() < 0.0001 && meshes[j].angVelocity.norm() < 0.001) continue;
+	//	loop++;
+	//	if (loop > maxloops)
+	//	{
+	//		break;
+	//	}
+	//	if (meshes[i].isCollide(meshes[j], depth, contactNormal, penPosition))
+	//	{
+	//		handleCollision(meshes[i], meshes[j], depth, contactNormal, penPosition, CRCoeff);
+	//		i = 0; // restart loop
+	//		break;
+	//	}
+	//}
     
     currTime+=timeStep;
   }
