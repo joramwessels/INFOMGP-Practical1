@@ -165,16 +165,15 @@ public:
     }
     
     //updating linear and angular velocity according to all impulses
-	RowVector3d force, torque, r;
+	Vector3d jn, torque, r;
 	Matrix3d currInvIT = getCurrInvInertiaTensor();
 	int forceCount = currImpulses.size();
 	for (int i = 0; i < forceCount; i++)
 	{
 		r = (currImpulses[i].first - COM);			// radius (COM to origin of force)
-		force = currImpulses[i].second;				// F (just the direction)
-		torque = r.cross(currImpulses[i].second);	// t = r x F
-		comVelocity += (force / totalMass);			// a = F / m
-		angVelocity += (torque * currInvIT);		// alpha = (t^T)I^-1 (torque is a row vector)
+		jn = currImpulses[i].second;				// F (just the direction)
+		comVelocity += (jn / totalMass);			// a = F / m
+		angVelocity += (currInvIT * r.cross(jn));		// angVelocity+ = angVelocity- + I^-1 (r x jn) ((r x jn) is a vector)
 	}
 	currImpulses.clear();
   }
@@ -342,14 +341,31 @@ public:
 	  posCorrection2 = contactNormal * m2MoveBack;
 	  contactPosition = penPosition + posCorrection2;
 
+	  //std::cout << "contactPosition: " << contactPosition << std::endl;
+	  //std::cout << "m1.COM: " << m1.COM << std::endl;
+	  //std::cout << "m2.COM: " << m2.COM << std::endl;
+
 	  m1.COM += posCorrection1;
 	  m2.COM += posCorrection2;
 	  for (int i = 0; i < m1.currV.rows(); i++) m1.currV.row(i) += posCorrection1;
 	  for (int i = 0; i < m2.currV.rows(); i++) m2.currV.row(i) += posCorrection2;
 
-	  collisionSpeed = (m1.comVelocity - m2.comVelocity).dot(contactNormal);
+	  Vector3d r1 = contactPosition - m1.COM;
+	  Vector3d r2 = contactPosition - m2.COM;
+	  Vector3d totalClosingVelocity1 = m1.comVelocity + m1.angVelocity.cross(r1);
+	  Vector3d totalClosingVelocity2 = m2.comVelocity + m2.angVelocity.cross(r2);
+	  Vector3d r1crossn = r1.cross(contactNormal);
+	  Vector3d r2crossn = r2.cross(contactNormal);
+	  
+	  collisionSpeed = (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal);
 	  if (collisionSpeed < jitterTolerance) return;
-	  j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass));
+
+	  //float j = (1 + CRCoeff) * (m1.comVelocity - m2.comVelocity).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass));
+	  //float j = (1 + CRCoeff) * (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass) 
+		//  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+	  j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) 
+		  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
 
