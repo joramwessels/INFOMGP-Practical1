@@ -17,7 +17,7 @@ void support(const void *_obj, const ccd_vec3_t *_d, ccd_vec3_t *_p);
 void stub_dir(const void *obj1, const void *obj2, ccd_vec3_t *dir);
 void center(const void *_obj, ccd_vec3_t *dir);
 
-
+float dragCoeff = 0;
 
 //Impulse is defined as a pair <position, direction>
 typedef std::pair<RowVector3d,RowVector3d> Impulse;
@@ -236,9 +236,11 @@ public:
     if (isFixed)
       return;
     
-    //integrating external forces (only gravity)
-    Vector3d gravity; gravity<<0,-9.8,0.0;
-    comVelocity+=gravity*timeStep;
+    //integrating external forces (drag and gravity)
+	Vector3d gravity; gravity << 0, -9.8, 0.0;
+	comVelocity += gravity * timeStep;
+	comVelocity -= dragCoeff * comVelocity * timeStep;
+	angVelocity -= dragCoeff * angVelocity * timeStep;
   }
   
   
@@ -327,7 +329,7 @@ public:
 
 	  //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
 	  RowVector3d contactPosition, posCorrection1, posCorrection2;
-	  double m2MoveBack, collisionSpeed, j, jitterTolerance = 0.001;
+	  double m2MoveBack, collisionSpeed, jitterTolerance = 0.001;
 	  if (m1.isFixed) {
 		  m2MoveBack =  depth;
 	  }
@@ -380,8 +382,6 @@ public:
 	  m1.updateImpulseVelocities();
 	  m2.updateImpulseVelocities();
   }
-  
-  
   
   /*********************************************************************
    This function handles a single time step by:
