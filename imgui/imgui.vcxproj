@@ -75,7 +75,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\external\libigl-imgui\..\imgui;$(SolutionDir)\libigl\external\libigl-imgui\.;$(SolutionDir)\libigl\external\libigl-imgui\..\imgui\examples;$(SolutionDir)\libigl\external\glad\include;$(SolutionDir)\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -109,7 +109,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\external\libigl-imgui\..\imgui;$(SolutionDir)\libigl\external\libigl-imgui\.;$(SolutionDir)\libigl\external\libigl-imgui\..\imgui\examples;$(SolutionDir)\libigl\external\glad\include;$(SolutionDir)\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -143,7 +143,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\external\libigl-imgui\..\imgui;$(SolutionDir)\libigl\external\libigl-imgui\.;$(SolutionDir)\libigl\external\libigl-imgui\..\imgui\examples;$(SolutionDir)\libigl\external\glad\include;$(SolutionDir)\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -177,7 +177,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\external\libigl-imgui\..\imgui;$(SolutionDir)\libigl\external\libigl-imgui\.;$(SolutionDir)\libigl\external\libigl-imgui\..\imgui\examples;$(SolutionDir)\libigl\external\glad\include;$(SolutionDir)\libigl\external\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
