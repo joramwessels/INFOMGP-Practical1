@@ -17,7 +17,7 @@ void support(const void *_obj, const ccd_vec3_t *_d, ccd_vec3_t *_p);
 void stub_dir(const void *obj1, const void *obj2, ccd_vec3_t *dir);
 void center(const void *_obj, ccd_vec3_t *dir);
 
-
+float dragCoeff = 0;
 
 //Impulse is defined as a pair <position, direction>
 typedef std::pair<RowVector3d,RowVector3d> Impulse;
@@ -236,9 +236,11 @@ public:
     if (isFixed)
       return;
     
-    //integrating external forces (only gravity)
-    Vector3d gravity; gravity<<0,-9.8,0.0;
-    comVelocity+=gravity*timeStep;
+    //integrating external forces (drag and gravity)
+	Vector3d gravity; gravity << 0, -9.8, 0.0;
+	comVelocity += gravity * timeStep;
+	comVelocity -= dragCoeff * comVelocity * timeStep;
+	angVelocity -= dragCoeff * angVelocity * timeStep;
   }
   
   
@@ -327,7 +329,7 @@ public:
 
 	  //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
 	  RowVector3d contactPosition, posCorrection1, posCorrection2;
-	  double m2MoveBack, collisionSpeed, j, jitterTolerance = 0.001;
+	  double m2MoveBack, collisionSpeed, jitterTolerance = 0.001;
 	  if (m1.isFixed) {
 		  m2MoveBack =  depth;
 	  }
@@ -341,9 +343,9 @@ public:
 	  posCorrection2 = contactNormal * m2MoveBack;
 	  contactPosition = penPosition + posCorrection2;
 
-	  //std::cout << "contactPosition: " << contactPosition << std::endl;
-	  //std::cout << "m1.COM: " << m1.COM << std::endl;
-	  //std::cout << "m2.COM: " << m2.COM << std::endl;
+	  std::cout << "contactPosition: " << contactPosition << std::endl;
+	  std::cout << "m1.COM: " << m1.COM << std::endl;
+	  std::cout << "m2.COM: " << m2.COM << std::endl;
 
 	  m1.COM += posCorrection1;
 	  m2.COM += posCorrection2;
@@ -363,9 +365,8 @@ public:
 	  //float j = (1 + CRCoeff) * (m1.comVelocity - m2.comVelocity).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass));
 	  //float j = (1 + CRCoeff) * (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass) 
 		//  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
-	  j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) 
+	  float j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) 
 		  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
-
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
 
@@ -381,8 +382,6 @@ public:
 	  m1.updateImpulseVelocities();
 	  m2.updateImpulseVelocities();
   }
-  
-  
   
   /*********************************************************************
    This function handles a single time step by:

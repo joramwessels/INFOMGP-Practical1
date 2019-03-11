@@ -134,6 +134,7 @@ class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
     if (ImGui::CollapsingHeader("Algorithm Options", ImGuiTreeNodeFlags_DefaultOpen))
     {
       ImGui::InputFloat("CR Coeff",&CRCoeff,0,0,3);
+      ImGui::InputFloat("Drag Coeff",&dragCoeff,0,0,3);
       
       
       if (ImGui::InputFloat("Time Step", &timeStep)) {
