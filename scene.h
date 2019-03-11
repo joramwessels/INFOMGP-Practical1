@@ -130,7 +130,7 @@ public:
 	  Matrix3d R=Q2RotMatrix(orientation);
 	  Matrix3d IT = invIT.inverse();
 	  return (R.transpose() * IT * R).inverse();
-	  //return R * invIT * R.transpose();
+	  //return R.transpose() * invIT * R;
   }
   
   

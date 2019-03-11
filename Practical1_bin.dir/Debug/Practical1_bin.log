@@ -4,12 +4,16 @@
   mpr.c
   polytope.c
   support.c
+  vec3.c
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\mpr.c(100): warning C4273: 'ccdMPRIntersect': inconsistent dll linkage
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\ccd.h(131): note: see previous definition of 'ccdMPRIntersect' (compiling source file C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\mpr.c)
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\mpr.c(119): warning C4273: 'ccdMPRPenetration': inconsistent dll linkage
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\ccd.h(146): note: see previous definition of 'ccdMPRPenetration' (compiling source file C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\mpr.c)
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\mpr.c(441): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\mpr.c(445): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\polytope.c(257): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\polytope.c(278): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c(87): warning C4273: 'ccdFirstDirDefault': inconsistent dll linkage
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\ccd.h(75): note: see previous definition of 'ccdFirstDirDefault' (compiling source file C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c)
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c(92): warning C4273: 'ccdGJKIntersect': inconsistent dll linkage
@@ -19,10 +23,6 @@ C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c(99
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c(177): warning C4273: 'ccdGJKPenetration': inconsistent dll linkage
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\ccd.h(124): note: see previous definition of 'ccdGJKPenetration' (compiling source file C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c)
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ccd.c(604): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
-  vec3.c
-C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\polytope.c(257): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
-C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\polytope.c(278): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\vec3.c(133): warning C4273: 'ccdVec3PointSegmentDist2': inconsistent dll linkage
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\vec3.h(188): note: see previous definition of 'ccdVec3PointSegmentDist2' (compiling source file C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\vec3.c)
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\vec3.c(141): warning C4273: 'ccdVec3PointTriDist2': inconsistent dll linkage
@@ -98,8 +98,8 @@ c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\i
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\opengl\glfw\imgui\ImGuiMenu.cpp(60): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\opengl\glfw\imgui\ImGuiMenu.cpp(369): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\opengl\glfw\imgui\ImGuiMenu.cpp(389): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\include\igl/opengl/glfw/imgui/ImGuiHelpers.h(40): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\include\igl/opengl/glfw/imgui/ImGuiHelpers.h(58): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\include\igl/opengl/glfw/imgui/ImGuiHelpers.h(40): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\include\igl/opengl/glfw/imgui/ImGuiHelpers.h(58): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\scene.h(445): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\scene.h(449): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
 C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\main.cpp(16): warning C4305: 'initializing': truncation from 'double' to 'float'
@@ -158,6 +158,19 @@ c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\i
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(1195): note: see declaration of 'fscanf'
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\readMESH.cpp(443): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(1195): note: see declaration of 'fscanf'
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.10.25017\include\xutility(2350): warning C4996: 'std::copy::_Unchecked_iterators::_Deprecate': Call to 'std::copy' with parameters that may be unsafe - this call relies on the caller to check that the passed values are correct. To disable this warning, use -D_SCL_SECURE_NO_WARNINGS. See documentation on how to use Visual C++ 'Checked Iterators'
+  C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.10.25017\include\xutility(2350): note: see declaration of 'std::copy::_Unchecked_iterators::_Deprecate'
+  C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\include\igl/serialize.h(734): note: see reference to function template instantiation '_OutIt std::copy<std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<char>>>,uint8_t*>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=uint8_t *,
+              _InIt=std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<char>>>
+          ]
+  C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\include\igl/serialize.h(757): note: see reference to function template instantiation 'void igl::serialization::deserialize<::size_t>(T &,std::_Vector_const_iterator<std::_Vector_val<std::_Simple_types<char>>> &)' being compiled
+          with
+          [
+              T=::size_t
+          ]
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\per_face_normals.cpp(21): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\per_face_normals.cpp(47): note: see reference to function template instantiation 'void igl::per_face_normals<Derived,Eigen::Matrix<int,-1,-1,0,-1,-1>,Eigen::Matrix<double,3,1,0,3,1>,Eigen::Matrix<double,-1,-1,0,-1,-1>>(const Eigen::MatrixBase<Derived> &,const Eigen::MatrixBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &,const Eigen::MatrixBase<Eigen::Matrix<double,3,1,0,3,1>> &,Eigen::PlainObjectBase<Derived> &)' being compiled
           with
@@ -356,11 +369,11 @@ c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\i
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\sort.cpp(74): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\sort.cpp(78): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\parallel_for.h(108): warning C4244: 'argument': conversion from 'Index' to 'const int', possible loss of data
-  c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\doublearea.cpp(199): note: see reference to function template instantiation 'bool igl::parallel_for<Index,igl::doublearea::<lambda_68877b35a93cbac5e1ff095c5c17bfef>>(const Index,const FunctionType &,const ::size_t)' being compiled
+  c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\doublearea.cpp(199): note: see reference to function template instantiation 'bool igl::parallel_for<Index,igl::doublearea::<lambda_5bf34aa41c64e684ea2e9784d7c4827d>>(const Index,const FunctionType &,const ::size_t)' being compiled
           with
           [
               Index=Index,
-              FunctionType=igl::doublearea::<lambda_68877b35a93cbac5e1ff095c5c17bfef>
+              FunctionType=igl::doublearea::<lambda_5bf34aa41c64e684ea2e9784d7c4827d>
           ]
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\sort.cpp(167): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
   c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\sort.cpp(37): note: see reference to function template instantiation 'void igl::sort2<Derived,Eigen::Matrix<double,-1,3,0,-1,3>,Eigen::Matrix<int,-1,-1,0,-1,-1>>(const Eigen::DenseBase<Derived> &,const int,const bool,Eigen::PlainObjectBase<Derived> &,Eigen::PlainObjectBase<Eigen::Matrix<int,-1,-1,0,-1,-1>> &)' being compiled
@@ -382,25 +395,27 @@ c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\i
           ]
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\sort.cpp(215): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
 c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\parallel_for.h(133): warning C4018: '<': signed/unsigned mismatch
-  c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\parallel_for.h(109): note: see reference to function template instantiation 'bool igl::parallel_for<Index,igl::parallel_for::<lambda_946a5f5e8ace55b1c74f1e4340b12c92>,igl::parallel_for::<lambda_866582420a11052db64bc10a9448d1c2>,igl::parallel_for::<lambda_946a5f5e8ace55b1c74f1e4340b12c92>>(const Index,const PreFunctionType &,const FunctionType &,const AccumFunctionType &,const ::size_t)' being compiled
+  c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\parallel_for.h(109): note: see reference to function template instantiation 'bool igl::parallel_for<Index,igl::parallel_for::<lambda_35f1feb6da617c069d6e2cc6767416f8>,igl::parallel_for::<lambda_a1a09eda6d2612e9b05b6b38d9024ceb>,igl::parallel_for::<lambda_35f1feb6da617c069d6e2cc6767416f8>>(const Index,const PreFunctionType &,const FunctionType &,const AccumFunctionType &,const ::size_t)' being compiled
           with
           [
               Index=Index,
-              PreFunctionType=igl::parallel_for::<lambda_946a5f5e8ace55b1c74f1e4340b12c92>,
-              FunctionType=igl::parallel_for::<lambda_866582420a11052db64bc10a9448d1c2>,
-              AccumFunctionType=igl::parallel_for::<lambda_946a5f5e8ace55b1c74f1e4340b12c92>
+              PreFunctionType=igl::parallel_for::<lambda_35f1feb6da617c069d6e2cc6767416f8>,
+              FunctionType=igl::parallel_for::<lambda_a1a09eda6d2612e9b05b6b38d9024ceb>,
+              AccumFunctionType=igl::parallel_for::<lambda_35f1feb6da617c069d6e2cc6767416f8>
           ]
-  c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\doublearea.cpp(199): note: see reference to function template instantiation 'bool igl::parallel_for<Index,igl::doublearea::<lambda_68877b35a93cbac5e1ff095c5c17bfef>>(const Index,const FunctionType &,const ::size_t)' being compiled
+  c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\libigl\include\igl\doublearea.cpp(199): note: see reference to function template instantiation 'bool igl::parallel_for<Index,igl::doublearea::<lambda_5bf34aa41c64e684ea2e9784d7c4827d>>(const Index,const FunctionType &,const ::size_t)' being compiled
           with
           [
               Index=Index,
-              FunctionType=igl::doublearea::<lambda_68877b35a93cbac5e1ff095c5c17bfef>
+              FunctionType=igl::doublearea::<lambda_5bf34aa41c64e684ea2e9784d7c4827d>
           ]
-     Creating library C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/Release/Practical1_bin.lib and object C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/Release/Practical1_bin.exp
+     Creating library C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/Debug/Practical1_bin.lib and object C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/Debug/Practical1_bin.exp
 ccd.obj : warning LNK4217: locally defined symbol ccdVec3PointSegmentDist2 imported in function nextSupport
-polytope.obj : warning LNK4217: locally defined symbol ccdVec3PointSegmentDist2 imported in function ccdPtNearest
+polytope.obj : warning LNK4049: locally defined symbol ccdVec3PointSegmentDist2 imported
 ccd.obj : warning LNK4217: locally defined symbol ccdVec3PointTriDist2 imported in function doSimplex3
 mpr.obj : warning LNK4049: locally defined symbol ccdVec3PointTriDist2 imported
 polytope.obj : warning LNK4049: locally defined symbol ccdVec3PointTriDist2 imported
+main.obj : warning LNK4217: locally defined symbol ccdFirstDirDefault imported in function "public: bool __cdecl Mesh::isCollide(class Mesh const &,double &,class Eigen::Matrix<double,1,3,1,1,3> &,class Eigen::Matrix<double,1,3,1,1,3> &)" (?isCollide@Mesh@@QEAA_NAEBV1@AEANAEAV?$Matrix@N$00$02$00$00$02@Eigen@@2@Z)
 main.obj : warning LNK4217: locally defined symbol ccdMPRPenetration imported in function "public: bool __cdecl Mesh::isCollide(class Mesh const &,double &,class Eigen::Matrix<double,1,3,1,1,3> &,class Eigen::Matrix<double,1,3,1,1,3> &)" (?isCollide@Mesh@@QEAA_NAEBV1@AEANAEAV?$Matrix@N$00$02$00$00$02@Eigen@@2@Z)
-  Practical1_bin.vcxproj -> C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\Release\Practical1_bin.exe
+  Practical1_bin.vcxproj -> C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\Debug\Practical1_bin.exe
+  Practical1_bin.vcxproj -> C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/Debug/Practical1_bin.pdb (Full PDB)
