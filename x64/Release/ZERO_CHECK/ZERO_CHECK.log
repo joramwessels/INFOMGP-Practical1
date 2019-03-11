@@ -1,4 +1,5 @@
-﻿  Checking Build System
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.CppClean.targets(76,5): warning : The process cannot access the file 'c:\users\joram\documents\visual studio 2017\projects\infomgp-practical1\cmakefiles\generate.stamp' because it is being used by another process.
+  Checking Build System
   CMake does not need to re-run because C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/CMakeFiles/generate.stamp is up-to-date.
   CMake does not need to re-run because C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/glad/CMakeFiles/generate.stamp is up-to-date.
   CMake does not need to re-run because C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/glfw/CMakeFiles/generate.stamp is up-to-date.
