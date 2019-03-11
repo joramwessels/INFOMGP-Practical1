@@ -83,7 +83,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\external\eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\cmake\..\include;$(SolutionDir)\libigl\cmake\..\external\eigen;$(SolutionDir)\libigl\cmake\..\external\glad\include;$(SolutionDir)\libigl\cmake\..\external\glfw\include;$(SolutionDir)\libigl\cmake\..\external;$(SolutionDir)\libigl\cmake\..\external\imgui\examples;$(SolutionDir)\libigl\cmake\..\external\libigl-imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>Debug/</AssemblerListingLocation>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -129,7 +129,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\external\eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\cmake\..\include;$(SolutionDir)\libigl\cmake\..\external\eigen;$(SolutionDir)\libigl\cmake\..\external\glad\include;$(SolutionDir)\libigl\cmake\..\external\glfw\include;$(SolutionDir)\libigl\cmake\..\external;$(SolutionDir)\libigl\cmake\..\external\imgui\examples;$(SolutionDir)\libigl\cmake\..\external\libigl-imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>Release/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -175,7 +175,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\external\eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\cmake\..\include;$(SolutionDir)\libigl\cmake\..\external\eigen;$(SolutionDir)\libigl\cmake\..\external\glad\include;$(SolutionDir)\libigl\cmake\..\external\glfw\include;$(SolutionDir)\libigl\cmake\..\external;$(SolutionDir)\libigl\cmake\..\external\imgui\examples;$(SolutionDir)\libigl\cmake\..\external\libigl-imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>MinSizeRel/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -221,7 +221,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glad\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\glfw\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\.;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\external\libigl-imgui\..\imgui\examples;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\include;C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\libigl\cmake\..\external\eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\libigl\cmake\..\include;$(SolutionDir)\libigl\cmake\..\external\eigen;$(SolutionDir)\libigl\cmake\..\external\glad\include;$(SolutionDir)\libigl\cmake\..\external\glfw\include;$(SolutionDir)\libigl\cmake\..\external;$(SolutionDir)\libigl\cmake\..\external\imgui\examples;$(SolutionDir)\libigl\cmake\..\external\libigl-imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <AssemblerListingLocation>RelWithDebInfo/</AssemblerListingLocation>
       <CompileAs>CompileAsCpp</CompileAs>
