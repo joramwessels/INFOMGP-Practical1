@@ -1,9 +1,4 @@
-﻿  Building Custom Rule C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/libigl/external/libigl-imgui/CMakeLists.txt
-  CMake does not need to re-run because C:/Users/joram/Documents/Visual Studio 2017/Projects/INFOMGP-Practical1/imgui/CMakeFiles/generate.stamp is up-to-date.
-  imgui.cpp
-  imgui_demo.cpp
-  imgui_draw.cpp
-  imgui_impl_glfw.cpp
-  imgui_impl_opengl3.cpp
-  Generating Code...
-  imgui.vcxproj -> C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\imgui\Debug\imgui.lib
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\Microsoft.Common.CurrentVersion.targets(1879,5): warning : The referenced project 'C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\ZERO_CHECK.vcxproj' does not exist.
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\Microsoft.Common.CurrentVersion.targets(1879,5): warning : The referenced project 'C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\glad\glad.vcxproj' does not exist.
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\Microsoft.Common.CurrentVersion.targets(1879,5): warning : The referenced project 'C:\Users\joram\Documents\Visual Studio 2017\Projects\INFOMGP-Practical1\glfw\src\glfw.vcxproj' does not exist.
+C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\VCTargets\Microsoft.Cpp.WindowsSDK.targets(46,5): error MSB8036: The Windows SDK version 10.0.15063.0 was not found. Install the required version of Windows SDK or change the SDK version in the project property pages or by right-clicking the solution and selecting "Retarget solution".
