@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Admin\Sync\studie\Game Physics\INFOMGP-Practical1\bin\CMakeFiles\1d06085b498dad46bf39dcf518f9f212\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{F2EB37BB-1B40-3AD1-85D5-9A33ECDFB055}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
