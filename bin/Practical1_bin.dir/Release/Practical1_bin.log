@@ -1,8 +1,0 @@
-﻿     Creating library C:/Users/Admin/Sync/studie/Game Physics/INFOMGP-Practical1/bin/Release/Practical1_bin.lib and object C:/Users/Admin/Sync/studie/Game Physics/INFOMGP-Practical1/bin/Release/Practical1_bin.exp
-ccd.obj : warning LNK4217: locally defined symbol _ccdVec3PointSegmentDist2 imported in function ___ccdGJKEPA
-polytope.obj : warning LNK4049: locally defined symbol _ccdVec3PointSegmentDist2 imported
-ccd.obj : warning LNK4217: locally defined symbol _ccdVec3PointTriDist2 imported in function ___ccdGJKEPA
-mpr.obj : warning LNK4049: locally defined symbol _ccdVec3PointTriDist2 imported
-polytope.obj : warning LNK4049: locally defined symbol _ccdVec3PointTriDist2 imported
-main.obj : warning LNK4217: locally defined symbol _ccdMPRPenetration imported in function "public: void __thiscall Scene::updateScene(double,double)" (?updateScene@Scene@@QAEXNN@Z)
-  Practical1_bin.vcxproj -> C:\Users\Admin\Sync\studie\Game Physics\INFOMGP-Practical1\bin\Release\Practical1_bin.exe
