@@ -146,6 +146,7 @@ public:
 	// integrating angular velocity
 	RowVector4d omega = RowVector4d(0.0, angVelocity(0), angVelocity(1), angVelocity(2));
 	orientation += .5 * timeStep * QMult(omega, orientation);
+	orientation.normalize();
     
 	// apply to all triangles
     for (int i=0;i<currV.rows();i++)
