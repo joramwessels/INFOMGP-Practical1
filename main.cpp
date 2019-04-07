@@ -89,16 +89,29 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
       cout<<"Simulation paused"<<endl;
     return true;
   }
-  
+
   if (key == 'S')
   {
-    if (!viewer.core.is_animating){
-      scene.updateScene(timeStep, CRCoeff);
-      currTime+=timeStep;
-      updateMeshes(viewer);
-      std::cout <<"currTime: "<<currTime<<std::endl;
-      return true;
-    }
+	  if (!viewer.core.is_animating) {
+		  scene.updateScene(timeStep, CRCoeff);
+		  currTime += timeStep;
+		  updateMeshes(viewer);
+		  std::cout << "currTime: " << currTime << std::endl;
+		  return true;
+	  }
+  }
+
+  if (key == 'C')
+  {
+	  if (scene.catapult.aiming) scene.catapult.shoot();
+	  else {
+		  MatrixXi objT, objF;
+		  MatrixXd objV;
+		  igl::readMESH("../data" + std::string("/") + "box_tri.mesh", objV, objT, objF);
+		  scene.addMesh(objV, objF.rowwise().reverse(), objT, 1, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0));
+		  viewer.append_mesh();
+		  scene.catapult.fill(&scene.meshes.back());
+	  }
   }
   return false;
 }

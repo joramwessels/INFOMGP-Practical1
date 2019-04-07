@@ -146,6 +146,8 @@ public:
 	RowVector4d omega = RowVector4d(0.0, angVelocity(0), angVelocity(1), angVelocity(2));
 	orientation += .5 * timeStep * QMult(omega, orientation);
 	orientation.normalize();
+
+	cout << "orientation.norm(): " << orientation.norm() << endl;
     
 	// apply to all triangles
     for (int i=0;i<currV.rows();i++)
@@ -358,24 +360,19 @@ public:
 		return Vector3d(forces.col(0).sum(), forces.col(1).sum(), forces.col(2).sum());
 	}
 
-	void updateStrechPointVelocity(double timeStep) {
-		Vector3d force = getForce();
-		if (force.dot(orientation) <= 0) looseProjectile();
-
-		stretchPointVelocity += force * timeStep / projectile->totalMass;
-	}
-
-	void updateStrechPointPosition(double timeStep) {
-		stretchPoint += stretchPointVelocity * timeStep;
-	}
-
 	void update(double timeStep) {
 		if (projectile == NULL) return;
 		if (!aiming) {
-			updateStrechPointVelocity(timeStep);
-			updateStrechPointPosition(timeStep);
+
+			Vector3d force = getForce();
+			if (force.dot(orientation) <= 0) { looseProjectile(); return; }
+
+			stretchPointVelocity += force * timeStep / projectile->totalMass;
+			stretchPoint += stretchPointVelocity * timeStep;
 		}
 		projectile->COM = stretchPoint;
+		for (int i = 0; i < projectile->currV.rows(); i++)
+			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
 	}
 
 	void fill(Mesh* mesh) {
@@ -384,6 +381,8 @@ public:
 		projectile = mesh;
 		projectile->isFixed = true;
 		projectile->COM = stretchPoint;
+		for (int i = 0; i < projectile->currV.rows(); i++)
+			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
 	}
 
 	void shoot() {
