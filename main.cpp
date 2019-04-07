@@ -19,10 +19,10 @@ float CRCoeff= 1.0;
 Scene scene;
 
 vector<Eigen::MatrixXd> platV;
-vector<Eigen::MatrixXi> platF;
-vector<Eigen::MatrixXi> platT;
+Eigen::MatrixXi boxF(12, 3);
+Eigen::MatrixXi boxT(12, 4);
 vector<Eigen::RowVector3d> platCOM;
-vector<Eigen::RowVector4d> platOrientation;
+Eigen::RowVector4d boxOrientation;
 vector<Eigen::Vector3d> platColor;
 
 //void createPlatform()
@@ -61,6 +61,25 @@ vector<Eigen::Vector3d> platColor;
 
 void createPoolTable(RowVector3d position, double width=100.0, double length=200.0, double thickness=5.0)
 {
+	// F and T for any box if vertices are given in the right order
+	boxF <<
+		0, 1, 2,
+		2, 3, 0,
+		6, 5, 4,
+		4, 7, 6,
+		1, 0, 5,
+		0, 4, 5,
+		2, 1, 6,
+		1, 5, 6,
+		3, 2, 7,
+		2, 6, 7,
+		0, 3, 4,
+		3, 7, 4;
+	boxT << boxF, VectorXi::Constant(12, 8);
+	boxOrientation = Eigen::RowVector4d(1.0, 0.0, 0.0, 0.0);
+	Eigen::RowVector3d green = Eigen::RowVector3d(0.23, 0.71, 0.23);
+	Eigen::RowVector3d brown = Eigen::RowVector3d(0.58, 0.36, 0.12);
+
 	// green platform
 	platCOM.push_back(position);
 	Eigen::MatrixXd platformV(9, 3);
@@ -75,26 +94,49 @@ void createPoolTable(RowVector3d position, double width=100.0, double length=200
 		 width, -thickness, -length,
 		0.0, 0.0, 0.0;
 	platV.push_back(platformV);
-	Eigen::MatrixXi platformF(12, 3);
-	platformF <<
-		0,1,2,
-		2,3,0,
-		6,5,4,
-		4,7,6,
-		1,0,5,
-		0,4,5,
-		2,1,6,
-		1,5,6,
-		3,2,7,
-		2,6,7,
-		0,3,4,
-		3,7,4;
-	platF.push_back(platformF);
-	Eigen::MatrixXi platformT(12, 4);
-	platformT << platformF, VectorXi::Constant(12, 8);
-	platT.push_back(platformT);
-	platOrientation.push_back(Eigen::RowVector4d(1.0, 0.0, 0.0, 0.0));
-	platColor.push_back(Eigen::RowVector3d(0.2, 0.8, 0.2)); // Green
+	platColor.push_back(green);
+
+	// right border
+	platCOM.push_back(position + Eigen::RowVector3d(width + thickness, thickness, 0.0));
+	Eigen::MatrixXd bar1V(9, 3);
+	bar1V <<
+		-thickness, thickness * 2, -length,
+		-thickness, thickness * 2, length,
+		thickness, thickness * 2, length,
+		thickness, thickness * 2, -length,
+		-thickness, -thickness * 2, -length,
+		-thickness, -thickness * 2, length,
+		thickness, -thickness * 2, length,
+		thickness, -thickness * 2, -length,
+		0.0, 0.0, 0.0;
+	platV.push_back(bar1V);
+	platColor.push_back(brown);
+
+	// left border
+	platCOM.push_back(position + Eigen::RowVector3d(-width - thickness, thickness, 0.0));
+	platV.push_back(bar1V);
+	platColor.push_back(brown);
+
+	// top border
+	platCOM.push_back(position + Eigen::RowVector3d(0.0, thickness, length + thickness));
+	Eigen::MatrixXd bar2V(9, 3);
+	bar2V <<
+		-width, thickness * 2, -thickness,
+		-width, thickness * 2, thickness,
+		width, thickness * 2, thickness,
+		width, thickness * 2, -thickness,
+		-width, -thickness * 2, -thickness,
+		-width, -thickness * 2, thickness,
+		width, -thickness * 2, thickness,
+		width, -thickness * 2, -thickness,
+		0.0, 0.0, 0.0;
+	platV.push_back(bar2V);
+	platColor.push_back(brown);
+
+	// lower border
+	platCOM.push_back(position + Eigen::RowVector3d(0.0, thickness, -length - thickness));
+	platV.push_back(bar2V);
+	platColor.push_back(brown);
 }
 
 void updateMeshes(igl::opengl::glfw::Viewer &viewer)
@@ -199,7 +241,7 @@ int main(int argc, char *argv[])
   //createPlatform();
   createPoolTable(Eigen::Vector3d(0.0, 0.0, 0.0));
   for (int i = 0; i < platV.size(); i++)
-	scene.addMesh(platV[i], platF[i], platT[i], 10000.0, true, platCOM[i], platOrientation[i], platColor[i]);
+	scene.addMesh(platV[i], boxF, boxT, 10000.0, true, platCOM[i], boxOrientation, platColor[i]);
   
   //load scene from file
   scene.loadScene(std::string(argv[1]),std::string(argv[2]));
