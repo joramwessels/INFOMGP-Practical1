@@ -15,6 +15,9 @@ float currTime = 0;
 //initial values
 float timeStep = 0.02;
 float CRCoeff= 1.0;
+string projectileFile = "box_tri.mesh";
+string dataPath = "../data";
+float projectileDensity = 2.5;
 
 Scene scene;
 
@@ -104,11 +107,11 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
   if (key == 'C')
   {
 	  if (scene.catapult.aiming) scene.catapult.shoot();
-	  else {
+	  else if (scene.catapult.projectile == NULL) {
 		  MatrixXi objT, objF;
 		  MatrixXd objV;
-		  igl::readMESH("../data" + std::string("/") + "box_tri.mesh", objV, objT, objF);
-		  scene.addMesh(objV, objF.rowwise().reverse(), objT, 1, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0));
+		  igl::readMESH(dataPath + std::string("/") + projectileFile, objV, objT, objF);
+		  scene.addMesh(objV, objF.rowwise().reverse(), objT, projectileDensity, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0));
 		  viewer.append_mesh();
 		  scene.catapult.fill(&scene.meshes.back());
 	  }
@@ -161,6 +164,13 @@ class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
       ImGui::InputDouble("A.x",&scene.catapult.stretchPoint(0));
       ImGui::InputDouble("A.y",&scene.catapult.stretchPoint(1));
       ImGui::InputDouble("A.z",&scene.catapult.stretchPoint(2));
+	  ImGui::InputText("Data Path", dataPath);
+	  ImGui::InputText("Projectile Mesh", projectileFile);
+	  ImGui::InputFloat("Projectile Density", &projectileDensity, 0, 0, 3);
+	  ImGui::InputFloat("Rest Length 1", &scene.catapult.restLength1, 0, 0, 3);
+	  ImGui::InputFloat("Rest Length 2", &scene.catapult.restLength2, 0, 0, 3);
+	  ImGui::InputFloat("Stifness 1", &scene.catapult.K1, 0, 0, 3);
+	  ImGui::InputFloat("Stifness 2", &scene.catapult.K2, 0, 0, 3);
       
       
       if (ImGui::InputFloat("Time Step", &timeStep)) {

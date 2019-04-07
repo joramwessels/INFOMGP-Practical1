@@ -306,12 +306,18 @@ class Catapult {
 public:
 	MatrixXd corners, stretchPoint;
 	Vector3d orientation, stretchPointVelocity;
-	float restLength1, restLength2;
+	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
-	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0) {
-		RowVector3d horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
-		RowVector3d verDir = orientation.cross(horDir).normalized();
+	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength = 1, float K = 100) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
+
+		RowVector3d horDir, verDir;
+		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 0, 1; }
+		else {
+			horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
+			verDir = orientation.cross(horDir).normalized();
+		}
+
 		if (verDir[1] < 0) verDir *= -1;
 		cout << horDir << endl << verDir << endl;
 		corners << pos + height * verDir + width / 2 * horDir,
@@ -346,10 +352,14 @@ public:
 		double l2 = part2.norm();
 		double l3 = part3.norm();
 		double l4 = part4.norm();
-		RowVector3d dir1 = (part1 / l1 + part4 / l4).normalized();
-		RowVector3d dir2 = (part2 / l2 + part3 / l3).normalized();
-		double mag1 = (l1 + l4) - restLength1;
-		double mag2 = (l2 + l3) - restLength2;
+		RowVector3d restPos1 = corners.row(0) + (corners.row(3) - corners.row(0)) * l1 / (l1 + l4);
+		RowVector3d restPos2 = corners.row(1) + (corners.row(2) - corners.row(1)) * l2 / (l2 + l3);
+		RowVector3d dir1 = (restPos1 - stretchPoint).normalized();
+		RowVector3d dir2 = (restPos2 - stretchPoint).normalized();
+		//RowVector3d dir1 = (part1 / l1 + part4 / l4).normalized();
+		//RowVector3d dir2 = (part2 / l2 + part3 / l3).normalized();
+		double mag1 = K1 * ((l1 + l4) - restLength1);
+		double mag2 = K2 * ((l2 + l3) - restLength2);
 		MatrixXd forces(2, 3);
 		forces << dir1 * mag1, dir2 * mag2;
 		return forces;
@@ -360,19 +370,24 @@ public:
 		return Vector3d(forces.col(0).sum(), forces.col(1).sum(), forces.col(2).sum());
 	}
 
+	void updateProjectilePosition() {
+		projectile->COM = stretchPoint;
+		for (int i = 0; i < projectile->currV.rows(); i++)
+			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
+	}
+
 	void update(double timeStep) {
 		if (projectile == NULL) return;
 		if (!aiming) {
 
 			Vector3d force = getForce();
-			if (force.dot(orientation) <= 0) { looseProjectile(); return; }
+			if (force.dot(stretchPointVelocity) < 0) { looseProjectile(); return; }
 
 			stretchPointVelocity += force * timeStep / projectile->totalMass;
+			stretchPointVelocity += Vector3d(0, -9.81, 0) * timeStep;
 			stretchPoint += stretchPointVelocity * timeStep;
 		}
-		projectile->COM = stretchPoint;
-		for (int i = 0; i < projectile->currV.rows(); i++)
-			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
+		updateProjectilePosition();
 	}
 
 	void fill(Mesh* mesh) {
@@ -380,9 +395,7 @@ public:
 
 		projectile = mesh;
 		projectile->isFixed = true;
-		projectile->COM = stretchPoint;
-		for (int i = 0; i < projectile->currV.rows(); i++)
-			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
+		updateProjectilePosition();
 	}
 
 	void shoot() {
@@ -538,7 +551,7 @@ public:
       return false;
     int numofObjects;
 
-	catapult = Catapult(Vector3d(-100, 0, 0), Vector3d(1,.2,0), 100, 150, .8);
+	catapult = Catapult(Vector3d(-100, 0, 0), Vector3d(1,.2,0), 100, 150, .8, 400);
     
     currTime=0;
     sceneFileHandle>>numofObjects;
