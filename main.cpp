@@ -108,18 +108,28 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 
 bool pre_draw(igl::opengl::glfw::Viewer &viewer)
 {
-  using namespace Eigen;
-  using namespace std;
-  
-  if (viewer.core.is_animating){
-    scene.updateScene(timeStep, CRCoeff);
-    currTime+=timeStep;
-    //cout <<"currTime: "<<currTime<<endl;
-    updateMeshes(viewer);
-  }
- 
-  
-  return false;
+	using namespace Eigen;
+	using namespace std;
+
+	if (viewer.core.is_animating) {
+		scene.updateScene(timeStep, CRCoeff);
+		currTime += timeStep;
+		//cout <<"currTime: "<<currTime<<endl;
+		updateMeshes(viewer);
+	}
+
+	//cout << "scene.catapult.corners" << endl << scene.catapult.corners << endl << "scene.catapult.stretchPoint" << endl << scene.catapult.stretchPoint << endl;
+	viewer.data().add_edges(scene.catapult.corners, scene.catapult.stretchPoint.replicate(4,1), Eigen::RowVector3d(0, 0, 255));
+
+	return false;
+}
+
+bool post_draw(igl::opengl::glfw::Viewer &viewer)
+{
+	using namespace Eigen;
+	using namespace std;
+
+	return false;
 }
 
 class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
@@ -135,6 +145,9 @@ class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
     {
       ImGui::InputFloat("CR Coeff",&CRCoeff,0,0,3);
       ImGui::InputFloat("Drag Coeff",&dragCoeff,0,0,3);
+      ImGui::InputDouble("A.x",&scene.catapult.stretchPoint(0));
+      ImGui::InputDouble("A.y",&scene.catapult.stretchPoint(1));
+      ImGui::InputDouble("A.z",&scene.catapult.stretchPoint(2));
       
       
       if (ImGui::InputFloat("Time Step", &timeStep)) {
@@ -175,8 +188,8 @@ int main(int argc, char *argv[])
   }
   //mgpViewer.core.align_camera_center(scene.meshes[0].currV);
   
-  
   mgpViewer.callback_pre_draw = &pre_draw;
+  mgpViewer.callback_post_draw = &post_draw;
   mgpViewer.callback_key_down = &key_down;
   mgpViewer.core.is_animating = false;
   mgpViewer.core.animation_max_fps = 50.;

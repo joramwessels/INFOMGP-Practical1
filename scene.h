@@ -12,7 +12,6 @@
 using namespace Eigen;
 using namespace std;
 
-
 void support(const void *_obj, const ccd_vec3_t *_d, ccd_vec3_t *_p);
 void stub_dir(const void *obj1, const void *obj2, ccd_vec3_t *dir);
 void center(const void *_obj, ccd_vec3_t *dir);
@@ -146,6 +145,9 @@ public:
 	// integrating angular velocity
 	RowVector4d omega = RowVector4d(0.0, angVelocity(0), angVelocity(1), angVelocity(2));
 	orientation += .5 * timeStep * QMult(omega, orientation);
+	orientation.normalize();
+
+	cout << "orientation.norm(): " << orientation.norm() << endl;
     
 	// apply to all triangles
     for (int i=0;i<currV.rows();i++)
@@ -295,8 +297,109 @@ public:
     for (int i=0;i<boundTets.size();i++)
       boundTets(i)=boundTList[i];
   }
-  
-  ~Mesh(){}
+
+  Mesh() {}
+  ~Mesh() {}
+};
+
+class Catapult {
+public:
+	MatrixXd corners, stretchPoint;
+	Vector3d orientation, stretchPointVelocity;
+	float restLength1, restLength2;
+	Mesh* projectile = NULL;
+	bool aiming = false;
+	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0) {
+		RowVector3d horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
+		RowVector3d verDir = orientation.cross(horDir).normalized();
+		if (verDir[1] < 0) verDir *= -1;
+		cout << horDir << endl << verDir << endl;
+		corners << pos + height * verDir + width / 2 * horDir,
+			pos + height * verDir - width / 2 * horDir,
+			pos + width / 2 * horDir,
+			pos - width / 2 * horDir;
+		cout << corners << endl;
+		RowVector3d diagonal = corners.row(3) - corners.row(0);
+		stretchPoint << corners.row(0) + diagonal / 2;
+		restLength1 = diagonal.norm() * restLength;
+		restLength2 = diagonal.norm() * restLength;
+	}
+
+	//Mesh(const MatrixXd& _V, const MatrixXi& _F, const MatrixXi& _T, const double density, const bool _isFixed, const RowVector3d& _COM, const RowVector4d& _orientation)
+	Catapult() : corners(4, 3), stretchPoint(1, 3), orientation(1, 0, 0), stretchPointVelocity(0, 0, 0) {
+		corners << 0, 50, 50,
+			0, 50, -50,
+			0, -50, 50,
+			0, -50, -50;
+		RowVector3d diagonal = corners.row(3) - corners.row(0);
+		stretchPoint << corners.row(0) + diagonal / 2;
+		restLength1 = diagonal.norm();
+		restLength2 = diagonal.norm();
+	}
+
+	MatrixXd getForces() {
+		Vector3d part1 = (corners.row(0) - stretchPoint);
+		Vector3d part2 = (corners.row(1) - stretchPoint);
+		Vector3d part3 = (corners.row(2) - stretchPoint);
+		Vector3d part4 = (corners.row(3) - stretchPoint);
+		double l1 = part1.norm();
+		double l2 = part2.norm();
+		double l3 = part3.norm();
+		double l4 = part4.norm();
+		RowVector3d dir1 = (part1 / l1 + part4 / l4).normalized();
+		RowVector3d dir2 = (part2 / l2 + part3 / l3).normalized();
+		double mag1 = (l1 + l4) - restLength1;
+		double mag2 = (l2 + l3) - restLength2;
+		MatrixXd forces(2, 3);
+		forces << dir1 * mag1, dir2 * mag2;
+		return forces;
+	}
+
+	Vector3d getForce() {
+		MatrixXd forces = getForces();
+		return Vector3d(forces.col(0).sum(), forces.col(1).sum(), forces.col(2).sum());
+	}
+
+	void updateStrechPointVelocity(double timeStep) {
+		Vector3d force = getForce();
+		if (force.dot(orientation) <= 0) looseProjectile();
+
+		stretchPointVelocity += force * timeStep / projectile->totalMass;
+	}
+
+	void updateStrechPointPosition(double timeStep) {
+		stretchPoint += stretchPointVelocity * timeStep;
+	}
+
+	void update(double timeStep) {
+		if (projectile == NULL) return;
+		if (!aiming) {
+			updateStrechPointVelocity(timeStep);
+			updateStrechPointPosition(timeStep);
+		}
+		projectile->COM = stretchPoint;
+	}
+
+	void fill(Mesh* mesh) {
+		aiming = true;
+
+		projectile = mesh;
+		projectile->isFixed = true;
+		projectile->COM = stretchPoint;
+	}
+
+	void shoot() {
+		aiming = false;
+	}
+
+	void looseProjectile() {
+		projectile->isFixed = false;
+		projectile->comVelocity = stretchPointVelocity;
+		projectile = NULL;
+
+		stretchPointVelocity = Vector3d(0, 0, 0);
+		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
+	}
 };
 
 //This class contains the entire scene operations, and the engine time loop.
@@ -305,6 +408,7 @@ public:
   double currTime;
   int numFullV, numFullT;
   std::vector<Mesh> meshes;
+  Catapult catapult;
   
   //adding an objects. You do not need to update this generally
   void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation){
@@ -394,6 +498,8 @@ public:
     //integrating velocity, position and orientation from forces and previous states
     for (int i=0;i<meshes.size();i++)
       meshes[i].integrate(timeStep);
+
+	catapult.update(timeStep);
     
     //detecting and handling collisions when found
     //This is done exhaustively: checking every two objects in the scene.
@@ -434,6 +540,8 @@ public:
     if (!sceneFileHandle.is_open())
       return false;
     int numofObjects;
+
+	catapult = Catapult(Vector3d(-100, 0, 0), Vector3d(1,.2,0), 100, 150, .8);
     
     currTime=0;
     sceneFileHandle>>numofObjects;
