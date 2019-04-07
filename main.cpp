@@ -18,62 +18,99 @@ float CRCoeff= 1.0;
 
 Scene scene;
 
-Eigen::MatrixXd platV;
-Eigen::MatrixXi platF;
-Eigen::MatrixXi platT;
-Eigen::RowVector3d platCOM;
-Eigen::RowVector4d platOrientation;
+vector<Eigen::MatrixXd> platV;
+vector<Eigen::MatrixXi> platF;
+vector<Eigen::MatrixXi> platT;
+vector<Eigen::RowVector3d> platCOM;
+vector<Eigen::RowVector4d> platOrientation;
+vector<Eigen::Vector3d> platColor;
 
-void createPlatform()
+//void createPlatform()
+//{
+//  double platWidth=100.0;
+//  platCOM<<0.0,-5.0,-0.0;
+//  platV.resize(9,3);
+//  platF.resize(12,3);
+//  platT.resize(12,4);
+//  platV<<-platWidth,0.0,-platWidth,
+//  -platWidth,0.0,platWidth,
+//  platWidth,0.0,platWidth,
+//  platWidth,0.0, -platWidth,
+//  -platWidth,-platWidth/10.0,-platWidth,
+//  -platWidth,-platWidth/10.0,platWidth,
+//  platWidth,-platWidth/10.0,platWidth,
+//  platWidth,-platWidth/10.0, -platWidth,
+//  0.0,-platWidth/20.0, 0.0;
+//  platF<<0,1,2,
+//  2,3,0,
+//  6,5,4,
+//  4,7,6,
+//  1,0,5,
+//  0,4,5,
+//  2,1,6,
+//  1,5,6,
+//  3,2,7,
+//  2,6,7,
+//  0,3,4,
+//  3,7,4;
+//  
+//  platOrientation<<1.0,0.0,0.0,0.0;
+//  
+//  platT<<platF, VectorXi::Constant(12,8);
+//}
+
+void createPoolTable(RowVector3d position, double width=100.0, double length=200.0, double thickness=5.0)
 {
-  double platWidth=100.0;
-  platCOM<<0.0,-5.0,-0.0;
-  platV.resize(9,3);
-  platF.resize(12,3);
-  platT.resize(12,4);
-  platV<<-platWidth,0.0,-platWidth,
-  -platWidth,0.0,platWidth,
-  platWidth,0.0,platWidth,
-  platWidth,0.0, -platWidth,
-  -platWidth,-platWidth/10.0,-platWidth,
-  -platWidth,-platWidth/10.0,platWidth,
-  platWidth,-platWidth/10.0,platWidth,
-  platWidth,-platWidth/10.0, -platWidth,
-  0.0,-platWidth/20.0, 0.0;
-  platF<<0,1,2,
-  2,3,0,
-  6,5,4,
-  4,7,6,
-  1,0,5,
-  0,4,5,
-  2,1,6,
-  1,5,6,
-  3,2,7,
-  2,6,7,
-  0,3,4,
-  3,7,4;
-  
-  platOrientation<<1.0,0.0,0.0,0.0;
-  
-  platT<<platF, VectorXi::Constant(12,8);
-  
-  
+	// green platform
+	platCOM.push_back(position);
+	Eigen::MatrixXd platformV(9, 3);
+	platformV <<
+		-width,  thickness, -length,
+		-width,  thickness,  length,
+		 width,  thickness,  length,
+		 width,  thickness, -length,
+		-width, -thickness, -length,
+		-width, -thickness,  length,
+		 width, -thickness,  length,
+		 width, -thickness, -length,
+		0.0, 0.0, 0.0;
+	platV.push_back(platformV);
+	Eigen::MatrixXi platformF(12, 3);
+	platformF <<
+		0,1,2,
+		2,3,0,
+		6,5,4,
+		4,7,6,
+		1,0,5,
+		0,4,5,
+		2,1,6,
+		1,5,6,
+		3,2,7,
+		2,6,7,
+		0,3,4,
+		3,7,4;
+	platF.push_back(platformF);
+	Eigen::MatrixXi platformT(12, 4);
+	platformT << platformF, VectorXi::Constant(12, 8);
+	platT.push_back(platformT);
+	platOrientation.push_back(Eigen::RowVector4d(1.0, 0.0, 0.0, 0.0));
+	platColor.push_back(Eigen::RowVector3d(0.2, 0.8, 0.2)); // Green
 }
 
 void updateMeshes(igl::opengl::glfw::Viewer &viewer)
 {
-  RowVector3d platColor; platColor<<0.8,0.8,0.8;
-  RowVector3d meshColor; meshColor<<0.8,0.2,0.2;
+  //RowVector3d platColor; platColor<<0.8,0.8,0.8;
+  //RowVector3d meshColor; meshColor<<0.8,0.2,0.2;
   viewer.core.align_camera_center(scene.meshes[0].currV);
   for (int i=0;i<scene.meshes.size();i++){
     viewer.data_list[i].clear();
     viewer.data_list[i].set_mesh(scene.meshes[i].currV, scene.meshes[i].F);
     viewer.data_list[i].set_face_based(true);
-    viewer.data_list[i].set_colors(meshColor);
+    viewer.data_list[i].set_colors(scene.meshes[i].color);
     viewer.data_list[i].show_lines=false;
   }
   viewer.data_list[0].show_lines=false;
-  viewer.data_list[0].set_colors(platColor.replicate(scene.meshes[0].F.rows(),1));
+  //viewer.data_list[0].set_colors(platColor.replicate(scene.meshes[0].F.rows(),1));
   viewer.data_list[0].set_face_based(true);
   //viewer.core.align_camera_center(scene.meshes[0].currV);
 }
@@ -159,8 +196,10 @@ int main(int argc, char *argv[])
   }
   cout<<"scene file: "<<std::string(argv[2])<<endl;
   //create platform
-  createPlatform();
-  scene.addMesh(platV, platF, platT, 10000.0, true, platCOM, platOrientation);
+  //createPlatform();
+  createPoolTable(Eigen::Vector3d(0.0, 0.0, 0.0));
+  for (int i = 0; i < platV.size(); i++)
+	scene.addMesh(platV[i], platF[i], platT[i], 10000.0, true, platCOM[i], platOrientation[i], platColor[i]);
   
   //load scene from file
   scene.loadScene(std::string(argv[1]),std::string(argv[2]));
