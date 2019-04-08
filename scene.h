@@ -17,6 +17,7 @@ void stub_dir(const void *obj1, const void *obj2, ccd_vec3_t *dir);
 void center(const void *_obj, ccd_vec3_t *dir);
 
 float dragCoeff = 0;
+float frictionCoeff = 0;
 
 //Impulse is defined as a pair <position, direction>
 typedef std::pair<RowVector3d,RowVector3d> Impulse;
@@ -146,8 +147,6 @@ public:
 	RowVector4d omega = RowVector4d(0.0, angVelocity(0), angVelocity(1), angVelocity(2));
 	orientation += .5 * timeStep * QMult(omega, orientation);
 	orientation.normalize();
-
-	cout << "orientation.norm(): " << orientation.norm() << endl;
     
 	// apply to all triangles
     for (int i=0;i<currV.rows();i++)
@@ -457,10 +456,6 @@ public:
 	  posCorrection2 = contactNormal * m2MoveBack;
 	  contactPosition = penPosition + posCorrection2;
 
-	  std::cout << "contactPosition: " << contactPosition << std::endl;
-	  std::cout << "m1.COM: " << m1.COM << std::endl;
-	  std::cout << "m2.COM: " << m2.COM << std::endl;
-
 	  m1.COM += posCorrection1;
 	  m2.COM += posCorrection2;
 	  for (int i = 0; i < m1.currV.rows(); i++) m1.currV.row(i) += posCorrection1;
@@ -484,17 +479,36 @@ public:
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
 
-	  //std::cout << "impulse: " << impulse << std::endl;
+	  // Find friction force
+	  RowVector3d slidingVelocity = RowVector3d(totalClosingVelocity2 - totalClosingVelocity1) + contactNormal * collisionSpeed;
+	  RowVector3d frictionImpulse = j * frictionCoeff * slidingVelocity.normalized();
+	  bool noSliding = (slidingVelocity - frictionImpulse /*/ (m1.totalMass <= m2.totalMass ? m1.totalMass : m2.totalMass)*/).dot(slidingVelocity) <= jitterTolerance;
+
 	  if (impulse.norm()>10e-6) {
 		  m1.currImpulses.push_back(Impulse(contactPosition, -impulse));
 		  m2.currImpulses.push_back(Impulse(contactPosition, impulse));
+		  //if (!noSliding) {
+			  //m1.currImpulses.push_back(Impulse(contactPosition, -frictionImpulse));
+			  //m2.currImpulses.push_back(Impulse(contactPosition, frictionImpulse));
+		  //}
 	  }
-
-	  //std::cout<<"handleCollision end"<<std::endl;
 
 	  //updating velocities according to impulses
 	  m1.updateImpulseVelocities();
 	  m2.updateImpulseVelocities();
+
+	  if (noSliding) {
+		  RowVector3d normalVelocity1 = contactNormal * m1.comVelocity.dot(contactNormal);
+		  RowVector3d normalVelocity2 = contactNormal * m2.comVelocity.dot(contactNormal);
+		  RowVector3d tangentVelocity;
+		  if (m2.isFixed) tangentVelocity = m2.comVelocity - normalVelocity2;
+		  else if (m1.isFixed) tangentVelocity = m1.comVelocity - normalVelocity1;
+		  else tangentVelocity = ((m1.comVelocity - normalVelocity1) * m1.totalMass + (m2.comVelocity - normalVelocity2) * m2.totalMass) / (m1.totalMass + m2.totalMass);
+		  m1.comVelocity = normalVelocity1 + tangentVelocity;
+		  m2.comVelocity = normalVelocity2 + tangentVelocity;
+		  m1.angVelocity = m1.angVelocity - contactNormal * m1.angVelocity.dot(contactNormal);
+		  m2.angVelocity = m2.angVelocity - contactNormal * m2.angVelocity.dot(contactNormal);
+	  }
   }
   
   /*********************************************************************

@@ -161,6 +161,7 @@ class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
     {
       ImGui::InputFloat("CR Coeff",&CRCoeff,0,0,3);
       ImGui::InputFloat("Drag Coeff",&dragCoeff,0,0,3);
+      ImGui::InputFloat("Friction Coeff",&frictionCoeff,0,0,3);
       ImGui::InputDouble("A.x",&scene.catapult.stretchPoint(0));
       ImGui::InputDouble("A.y",&scene.catapult.stretchPoint(1));
       ImGui::InputDouble("A.z",&scene.catapult.stretchPoint(2));
