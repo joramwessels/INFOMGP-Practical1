@@ -321,11 +321,13 @@ public:
 	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
+	double width, height, thickness;
 
-	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength = 1, float K = 100) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
+	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, double thickness, float restLength = 1, float K = 100)
+		: corners(4, 3), stretchPoint(1, 3), height(height), width(width), thickness(thickness), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
 
 		RowVector3d horDir, verDir;
-		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 0, 1; }
+		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 1, 0; }
 		else {
 			horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
 			verDir = orientation.cross(horDir).normalized();
@@ -333,15 +335,29 @@ public:
 
 		if (verDir[1] < 0) verDir *= -1;
 		cout << horDir << endl << verDir << endl;
-		corners << pos + height * verDir + width / 2 * horDir,
-			pos + height * verDir - width / 2 * horDir,
-			pos + width / 2 * horDir,
-			pos - width / 2 * horDir;
+		//corners << pos + height * verDir + width / 2 * horDir,
+		//	pos + height * verDir - width / 2 * horDir,
+		//	pos + width / 2 * horDir,
+		//	pos - width / 2 * horDir;
+		double secondString = 0.25, thck = cos(45) * thickness;
+		corners <<
+			-width / 2 + thck, height + thck, 0.0, // upper left
+			 width / 2 - thck, height + thck, 0.0, // upper right
+			-width * secondString + thck, height - width * secondString + thck, 0.0, // lower left
+			 width * secondString - thck, height - width * secondString + thck, 0.0; // lower right
+			//height * RowVector3d(0, 1, 0) - (width * 0.5 - thck) * RowVector3d(1, 0, 0) + pos,
+			//height * RowVector3d(0, 1, 0) + (width * 0.5 - thck) * RowVector3d(1, 0, 0) + pos,
+			//(height - width * secondString) * RowVector3d(0, 1, 0) - (width * secondString - thck) * RowVector3d(1, 0, 0) + pos,
+			//(height - width * secondString) * RowVector3d(0, 1, 0) + (width * secondString - thck) * RowVector3d(1, 0, 0) + pos;
+		for (int i = 0; i < corners.rows(); i++) corners.row(i) += pos;
 		cout << corners << endl;
 		RowVector3d diagonal = corners.row(3) - corners.row(0);
-		stretchPoint << corners.row(0) + diagonal / 2;
-		restLength1 = diagonal.norm() * restLength;
-		restLength2 = diagonal.norm() * restLength;
+		//stretchPoint << corners.row(0) + diagonal / 2;
+		//restLength1 = diagonal.norm() * restLength;
+		//restLength2 = diagonal.norm() * restLength;
+		stretchPoint << corners.row(0) + diagonal * (corners.row(0) - corners.row(1)).norm() / ((corners.row(0) - corners.row(1)).norm() + (corners.row(2) - corners.row(3)).norm());
+		restLength1 = (corners.row(0) - corners.row(3)).norm() * restLength;
+		restLength1 = (corners.row(1) - corners.row(2)).norm() * restLength;
 		basePosition = RowVector3d(0.0, 0.0, 0.0);
 	}
 
@@ -385,7 +401,7 @@ public:
 	}
 
 	void updateProjectilePosition() {
-		projectile->COM = stretchPoint;
+		projectile->COM = stretchPoint + RowVector3d(0.0, 0.0, -7.0); // TODO hardcoded
 		for (int i = 0; i < projectile->currV.rows(); i++)
 			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
 	}
@@ -431,6 +447,13 @@ public:
 		mesh1->teleport(basePosition, _basePosition);
 		mesh2->teleport(basePosition, _basePosition);
 		mesh3->teleport(basePosition, _basePosition);
+
+		RowVector3d posChange = _basePosition - basePosition;
+		corners.row(0) += posChange;
+		corners.row(1) += posChange;
+		corners.row(2) += posChange;
+		corners.row(3) += posChange;
+		stretchPoint += posChange;
 		basePosition = _basePosition;
 	}
 
@@ -589,7 +612,7 @@ public:
   
   //loading a scene from the scene .txt files
   //you do not need to update this function
-  bool loadScene(const std::string dataFolder, const std::string sceneFileName){
+  bool loadScene(const std::string dataFolder, const std::string sceneFileName, Vector3d catapultPos, double catapultHeight, double catapultWidth, double catapultThickness){
     
     ifstream sceneFileHandle;
     sceneFileHandle.open(dataFolder+std::string("/")+sceneFileName);
@@ -597,7 +620,7 @@ public:
       return false;
     int numofObjects;
 
-	catapult = Catapult(Vector3d(0, 0, 0), Vector3d(1,.2,0), 100, 150, .8, 400);
+	catapult = Catapult(catapultPos, Vector3d(1,.2,0), catapultHeight, catapultWidth, catapultThickness, .8, 400);
     
     currTime=0;
     sceneFileHandle>>numofObjects;

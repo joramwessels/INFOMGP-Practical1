@@ -144,13 +144,17 @@ void createPoolTable(RowVector3d position, double width=100.0, double length=200
 
 // Creates the catapult mesh
 // The angle of the sticks is hardcoded at 45 degrees each
-void createAndAddCatapult(RowVector3d pos, double height, double width)
+void createAndAddCatapult(RowVector3d pos, double height, double width, double thickness)
 {
 	// Some parameters
-	double cylMeshLength = 14.0; // approximated by looking at .mesh file
-	double relBaseThickness = 1.3, relBaseLength = 0.8;
-	double thickness = 0.8, length = 2.8, cylLength = cylMeshLength * length;
+	double cylMeshLength = 20.0; // approximated by looking at .mesh file
+	double relBaseThickness = 1.3;
 	RowVector3d catapultBrown = RowVector3d(0.46, 0.29, 0.1);
+
+	// Fitting the function parameters to the given height/width (diregarding the thickness)
+	double length = width / (2 * cos(45) * cylMeshLength); // ensures the width parameter holds
+	double cylLength = cylMeshLength * length;
+	double relBaseLength = (height - (cos(45) * cylLength)) / cylLength; // ensures the height parameter holds
 
 	// Reading the mesh file
 	MatrixXi cylT, cylF;
@@ -172,8 +176,8 @@ void createAndAddCatapult(RowVector3d pos, double height, double width)
 	double rotHeight = cos(45) * cylLength * 0.5;
 	RowVector4d leftRot = RowVector4d(0.2705981, 0.2705981, 0.6532815, 0.6532815);
 	RowVector4d rightRot = RowVector4d(-0.2705981, -0.2705981, 0.6532815, 0.6532815);
-	scene.addMesh(stickV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d( rotHeight, cylLength + rotHeight, 0.0), leftRot, catapultBrown);  // left
-	scene.addMesh(stickV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d(-rotHeight, cylLength + rotHeight, 0.0), rightRot, catapultBrown); // right
+	scene.addMesh(stickV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d( rotHeight, cylLength * relBaseLength + rotHeight, 0.0), leftRot, catapultBrown);  // left
+	scene.addMesh(stickV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d(-rotHeight, cylLength * relBaseLength + rotHeight, 0.0), rightRot, catapultBrown); // right
 }
 
 void updateMeshes(igl::opengl::glfw::Viewer &viewer)
@@ -312,15 +316,16 @@ int main(int argc, char *argv[])
   cout<<"scene file: "<<std::string(argv[2])<<endl;
 
   // Initializing pool table and catapult
-  double tableThickness = 5.0;
-  createAndAddCatapult(RowVector3d(0.0, tableThickness, 0.0), 5.0, 2.5); // these need to be the first three meshes
-  createPoolTable(Eigen::Vector3d(0.0, 0.0 - tableThickness, 0.0), 100.0, 200.0, tableThickness);
+  double tableThickness = 5.0, catapultThickness = 0.7, catapultHeight = 70.0, catapultWidth = 50.0;
+  Vector3d catapultPos = RowVector3d(0.0, tableThickness, 0.0);
+  createAndAddCatapult(catapultPos, catapultHeight, catapultWidth, catapultThickness); // these need to be the first three meshes
+  createPoolTable(Eigen::Vector3d(0.0, 0.0 - tableThickness, 0.0), 120.0, 250.0, tableThickness);
   for (int i = 0; i < platV.size(); i++)
 	scene.addMesh(platV[i], boxF, boxT, 10000.0, true, platCOM[i], boxOrientation, platColor[i]);
 
   //load scene from file
   scene.cueBallIndex = scene.meshes.size();
-  scene.loadScene(std::string(argv[1]),std::string(argv[2]));
+  scene.loadScene(std::string(argv[1]),std::string(argv[2]), catapultPos, catapultHeight, catapultWidth, catapultThickness * 6.0);
 
   scene.updateScene(0.0, CRCoeff);
   
