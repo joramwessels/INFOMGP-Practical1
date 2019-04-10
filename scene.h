@@ -136,6 +136,14 @@ public:
 	  //return R.transpose() * invIT * R;
   }
   
+  void teleport(Vector3d oldPos, Vector3d newPos)
+  {
+	  if (!isFixed) return; // this function bypasses physics
+
+	  COM += (newPos - oldPos);
+	  for (int i = 0; i < currV.rows(); i++) currV.row(i) << QRot(origV.row(i), orientation) + COM;
+	  
+  }
   
   //Update the current position and orientation by integrating the linear and angular velocities, and update currV accordingly
   //You need to modify this according to its purpose
@@ -309,10 +317,11 @@ class Catapult {
 public:
 	MatrixXd corners, stretchPoint;
 	Vector3d orientation;
-	RowVector3d stretchPointVelocity;
+	RowVector3d stretchPointVelocity, basePosition;
 	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
+
 	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength = 1, float K = 100) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
 
 		RowVector3d horDir, verDir;
@@ -333,6 +342,7 @@ public:
 		stretchPoint << corners.row(0) + diagonal / 2;
 		restLength1 = diagonal.norm() * restLength;
 		restLength2 = diagonal.norm() * restLength;
+		basePosition = RowVector3d(0.0, 0.0, 0.0);
 	}
 
 	//Mesh(const MatrixXd& _V, const MatrixXi& _F, const MatrixXi& _T, const double density, const bool _isFixed, const RowVector3d& _COM, const RowVector4d& _orientation)
@@ -415,9 +425,20 @@ public:
 		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
 	}
 
-	void move(Vector3d basePosition, Vector3d orientation)
+	void move(RowVector3d _basePosition, Mesh* mesh1, Mesh* mesh2, Mesh* mesh3)
 	{
-		return;
+		_basePosition(1) = 0.0;
+		mesh1->teleport(basePosition, _basePosition);
+		mesh2->teleport(basePosition, _basePosition);
+		mesh3->teleport(basePosition, _basePosition);
+		basePosition = _basePosition;
+	}
+
+	void rotate(Vector4d _orientation)
+	{
+		// TODO
+		// - rotate orientation
+		// - rotate all 3 meshes around the base mesh (mesh[0])
 	}
 };
 
@@ -428,6 +449,7 @@ public:
   int numFullV, numFullT;
   std::vector<Mesh> meshes;
   Catapult catapult;
+  int cueBallIndex;
   
   //adding an objects. You do not need to update this generally
   void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation, RowVector3d color){
@@ -575,7 +597,7 @@ public:
       return false;
     int numofObjects;
 
-	catapult = Catapult(Vector3d(-100, 0, 0), Vector3d(1,.2,0), 100, 150, .8, 400);
+	catapult = Catapult(Vector3d(0, 0, 0), Vector3d(1,.2,0), 100, 150, .8, 400);
     
     currTime=0;
     sceneFileHandle>>numofObjects;

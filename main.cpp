@@ -142,17 +142,21 @@ void createPoolTable(RowVector3d position, double width=100.0, double length=200
 	platColor.push_back(brown);
 }
 
-//void createAndAddCatapult(double height, double width, std::string meshFile="cylinder.mesh")
-//{
-//	double cylLength, cylRadius;
-//	MatrixXi cylT, cylF;
-//	MatrixXd cylV;
-//	igl::readMESH(dataPath + std::string("/") + meshFile, cylV, cylT, cylF);
-//	RowVector3d catapultBrown = RowVector3d(0.46, 0.29, 0.1);
-//	scene.addMesh(cylV, cylF, cylT, 10000.0, true, RowVector3d(0.0, cylLength * 0.5, 0.0), RowVector4d(0.0, 1.0, 0.0, 0.0), catapultBrown); // base
-//	scene.addMesh(cylV, cylF, cylT, 10000.0, true, RowVector3d(0.0, cylLength * 1.5, 0.0), RowVector4d(0.0, 0.0, 0.1246747, 0.9921977), catapultBrown); // left
-//	scene.addMesh(cylV, cylF, cylT, 10000.0, true, RowVector3d(0.0, cylLength * 1.5, 0.0), RowVector4d(0.0, 0.0, -0.1246747, 0.9921977), catapultBrown); // right
-//}
+void createAndAddCatapult(double height, double width, std::string meshFile="cylinder.mesh")
+{
+	double thickness = 0.8, length = 2.3, cylLength = 17.0 * length;
+	double rotHeight = cos(45) * cylLength * 0.5;
+	RowVector3d catapultBrown = RowVector3d(0.46, 0.29, 0.1);
+	MatrixXi cylT, cylF;
+	MatrixXd cylV;
+	igl::readMESH(dataPath + std::string("/") + meshFile, cylV, cylT, cylF);
+	cylV.col(0) *= thickness;
+	cylV.col(1) *= thickness;
+	cylV.col(2) *= length;
+	scene.addMesh(cylV, cylF.rowwise().reverse(), cylT, 10000.0, true, RowVector3d(0.0, cylLength * 0.5, 0.0), RowVector4d(0, 0, 0.7071068, 0.7071068), catapultBrown); // base
+	scene.addMesh(cylV, cylF.rowwise().reverse(), cylT, 10000.0, true, RowVector3d(rotHeight, cylLength + rotHeight, 0.0), RowVector4d(0.2705981, 0.2705981, 0.6532815, 0.6532815), catapultBrown); // left
+	scene.addMesh(cylV, cylF.rowwise().reverse(), cylT, 10000.0, true, RowVector3d(-rotHeight, cylLength + rotHeight, 0.0), RowVector4d(-0.2705981, -0.2705981, 0.6532815, 0.6532815), catapultBrown); // right
+}
 
 void updateMeshes(igl::opengl::glfw::Viewer &viewer)
 {
@@ -199,12 +203,13 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
   {
 	  if (scene.catapult.aiming) scene.catapult.shoot();
 	  else if (scene.catapult.projectile == NULL) {
-		  MatrixXi objT, objF;
-		  MatrixXd objV;
-		  igl::readMESH(dataPath + std::string("/") + projectileFile, objV, objT, objF);
-		  scene.addMesh(objV, objF.rowwise().reverse(), objT, projectileDensity, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0), RowVector3d(0.9, 0.9, 0.9));
-		  viewer.append_mesh();
-		  scene.catapult.fill(&scene.meshes.back());
+		  //MatrixXi objT, objF;
+		  //MatrixXd objV;
+		  //igl::readMESH(dataPath + std::string("/") + projectileFile, objV, objT, objF);
+		  //scene.addMesh(objV, objF.rowwise().reverse(), objT, projectileDensity, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0), RowVector3d(0.9, 0.9, 0.9));
+		  //viewer.append_mesh();
+		  scene.catapult.move(scene.meshes[scene.cueBallIndex].COM, &(scene.meshes[0]), &(scene.meshes[1]), &(scene.meshes[2]));
+		  scene.catapult.fill(&scene.meshes[scene.cueBallIndex]);
 	  }
   }
   return false;
@@ -289,13 +294,14 @@ int main(int argc, char *argv[])
   cout<<"scene file: "<<std::string(argv[2])<<endl;
 
   // Initializing pool table and catapult
-  //createAndAddCatapult(5.0, 2.5); // these need to be the first three meshes
+  createAndAddCatapult(5.0, 2.5); // these need to be the first three meshes
   double thickness = 5.0;
   createPoolTable(Eigen::Vector3d(0.0, 0.0 - thickness, 0.0), 100.0, 200.0, thickness);
   for (int i = 0; i < platV.size(); i++)
 	scene.addMesh(platV[i], boxF, boxT, 10000.0, true, platCOM[i], boxOrientation, platColor[i]);
-  
+
   //load scene from file
+  scene.cueBallIndex = scene.meshes.size();
   scene.loadScene(std::string(argv[1]),std::string(argv[2]));
 
   scene.updateScene(0.0, CRCoeff);
