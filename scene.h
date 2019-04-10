@@ -318,8 +318,7 @@ public:
 class Catapult {
 public:
 	MatrixXd corners, stretchPoint;
-	Vector3d orientation;
-	RowVector3d stretchPointVelocity, basePosition;
+	RowVector3d stretchPointVelocity, orientation, basePosition;
 	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
@@ -329,14 +328,14 @@ public:
 		: corners(4, 3), stretchPoint(1, 3), height(height), width(width), thickness(thickness), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
 
 		RowVector3d horDir, verDir;
-		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 1, 0; }
+		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 0, 1; }
 		else {
 			horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
 			verDir = orientation.cross(horDir).normalized();
 		}
 
 		if (verDir[1] < 0) verDir *= -1;
-		cout << horDir << endl << verDir << endl;
+		//cout << horDir << endl << verDir << endl;
 		//corners << pos + height * verDir + width / 2 * horDir,
 		//	pos + height * verDir - width / 2 * horDir,
 		//	pos + width / 2 * horDir,
@@ -405,7 +404,7 @@ public:
 	void updateProjectilePosition() {
 		projectile->COM = stretchPoint + RowVector3d(0.0, 0.0, -7.0); // TODO hardcoded
 		for (int i = 0; i < projectile->currV.rows(); i++)
-			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
+			projectile->currV.row(i) = QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
 	}
 
 	void update(double timeStep) {
@@ -440,7 +439,7 @@ public:
 		projectile = NULL;
 
 		stretchPointVelocity = Vector3d(0, 0, 0);
-		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
+		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) * (corners.row(0) - corners.row(1)).norm() / ((corners.row(0) - corners.row(1)).norm() + (corners.row(2) - corners.row(3)).norm());
 	}
 
 	void move(RowVector3d _basePosition, Mesh* mesh1, Mesh* mesh2, Mesh* mesh3)
@@ -538,7 +537,7 @@ public:
 
 	  if (m1.isPoolTable && !m2.isFixed) {
 		  // Calculate vertical impulse
-		  float j = (1 + CRCoeff * 0.1) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+		  float j = (1 + CRCoeff * 0.001) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
 
 		  impulse = j * contactNormal;
 
@@ -555,7 +554,7 @@ public:
 			  RowVector3d normalCOMVel = contactNormal * m2.comVelocity.dot(contactNormal);
 			  RowVector3d tanCOMVel = m2.comVelocity - normalCOMVel;
 
-			  RowVector3d totaltanCOMVel = tanCOMVel + contactNormal.cross(tanAngVel); // !!!!!!!!!!!
+			  RowVector3d totaltanCOMVel = tanCOMVel;// + contactNormal.cross(tanAngVel); // !!!!!!!!!!!
 			  
 			  // Apply energy loss to tan comVelocity (rolling)
 			  totaltanCOMVel *= 0.99;
@@ -564,7 +563,7 @@ public:
 			  normalAngVel *= 0.8;
 
 			  // Recompose com- and angVelocity
-			  m2.angVelocity = totaltanCOMVel.cross(contactNormal) / 2;// +normalAngVel; // !!!!!!!!!!!
+			  m2.angVelocity = contactNormal.cross(totaltanCOMVel) / 2;// +normalAngVel; // !!!!!!!!!!!
 			  m2.comVelocity = totaltanCOMVel + normalCOMVel;
 		  }
 	  }
@@ -673,7 +672,7 @@ public:
       return false;
     int numofObjects;
 
-	catapult = Catapult(catapultPos, Vector3d(0, 0, -1), catapultHeight, catapultWidth, catapultThickness, .8, 400);
+	catapult = Catapult(catapultPos, Vector3d(0, 0, -1), catapultHeight, catapultWidth, catapultThickness, .8, 100000);
     
     currTime=0;
     sceneFileHandle>>numofObjects;
