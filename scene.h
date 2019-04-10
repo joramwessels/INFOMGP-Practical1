@@ -460,7 +460,7 @@ public:
       tempF<<objF.col(2), objF.col(1), objF.col(0);
       objF=tempF;
       
-      addMesh(objV,objF, objT,density, isFixed, userCOM, userOrientation, color);
+      addMesh(objV,objF.rowwise().reverse(), objT,density, isFixed, userCOM, userOrientation, color);
       cout << "COM: " << userCOM <<endl;
       cout << "orientation: " << userOrientation <<endl;
     }
