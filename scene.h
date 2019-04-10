@@ -43,6 +43,7 @@ public:
   
   //kinematics
   bool isFixed;  //is the object immobile
+  bool isPoolTable = 0;  //is the object immobile
   double totalMass;  //sum(1/invMass)
   double totalVolume;
   RowVector3d comVelocity;  //the linear velocity of the center of mass
@@ -477,19 +478,58 @@ public:
 	  Vector3d totalClosingVelocity2 = m2.comVelocity + m2.angVelocity.cross(r2);
 	  Vector3d r1crossn = r1.cross(contactNormal);
 	  Vector3d r2crossn = r2.cross(contactNormal);
-	  
+
 	  collisionSpeed = (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal);
 	  if (collisionSpeed < jitterTolerance) return;
 
-	  float j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) 
-		  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+	  RowVector3d impulse;
 
-	  RowVector3d impulse = j * contactNormal;  //change this to your result
+
+	  cout << "m2.comVelocity: " << m2.comVelocity << endl;
+	  cout << "m2.angVelocity: " << m2.angVelocity << endl;
+
+	  if (m1.isPoolTable && !m2.isFixed) {
+		  // Calculate vertical impulse
+		  float j = (1 + CRCoeff * 0.1) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+
+		  impulse = j * contactNormal;
+
+		  cout << "ja" << endl;
+		  cout << "impulse[1]/m2.totalMass: " << impulse[1] / m2.totalMass << endl;
+		  cout << "9.81 * timeStep: " << 9.81 * timeStep << endl;
+
+		  if (impulse[1]/m2.totalMass <= 9.81 * timeStep) { // if m2 stays on pool table
+
+			  // Decompose com- and angVelocity
+			  RowVector3d normalAngVel = contactNormal * m2.angVelocity.dot(contactNormal);
+			  normalAngVel = m2.angVelocity - normalAngVel;
+			  RowVector3d tanAngVel = m2.angVelocity - normalAngVel;
+			  RowVector3d normalCOMVel = contactNormal * m2.comVelocity.dot(contactNormal);
+			  RowVector3d tanCOMVel = m2.comVelocity - normalCOMVel;
+
+			  RowVector3d totaltanCOMVel = tanCOMVel + contactNormal.cross(tanAngVel); // !!!!!!!!!!!
+			  
+			  // Apply energy loss to tan comVelocity (rolling)
+			  totaltanCOMVel *= 0.99;
+
+			  // Apply friction to normal angVelocity (spinning)
+			  normalAngVel *= 0.8;
+
+			  // Recompose com- and angVelocity
+			  m2.angVelocity = totaltanCOMVel.cross(contactNormal) / 2;// +normalAngVel; // !!!!!!!!!!!
+			  m2.comVelocity = totaltanCOMVel + normalCOMVel;
+		  }
+	  }
+	  else {
+		  float j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+
+		  impulse = j * contactNormal;
+	  }
 
 	  // Find friction force
-	  RowVector3d slidingVelocity = RowVector3d(totalClosingVelocity2 - totalClosingVelocity1) + contactNormal * collisionSpeed;
-	  RowVector3d frictionImpulse = j * frictionCoeff * slidingVelocity.normalized();
-	  bool noSliding = (slidingVelocity - frictionImpulse /*/ (m1.totalMass <= m2.totalMass ? m1.totalMass : m2.totalMass)*/).dot(slidingVelocity) <= jitterTolerance;
+	  //RowVector3d slidingVelocity = RowVector3d(totalClosingVelocity2 - totalClosingVelocity1) + contactNormal * collisionSpeed;
+	  //RowVector3d frictionImpulse = j * frictionCoeff * slidingVelocity.normalized();
+	  //bool noSliding = (slidingVelocity - frictionImpulse /*/ (m1.totalMass <= m2.totalMass ? m1.totalMass : m2.totalMass)*/).dot(slidingVelocity) <= jitterTolerance;
 
 	  if (impulse.norm()>10e-6) {
 		  //cout << "impulse: " << impulse << endl;
@@ -505,7 +545,7 @@ public:
 	  m1.updateImpulseVelocities(timeStep);
 	  m2.updateImpulseVelocities(timeStep);
 
-	  if (noSliding) {
+	  /*if (noSliding) {
 		  RowVector3d normalVelocity1 = contactNormal * m1.comVelocity.dot(contactNormal);
 		  RowVector3d normalVelocity2 = contactNormal * m2.comVelocity.dot(contactNormal);
 		  RowVector3d tangentVelocity;
@@ -516,7 +556,7 @@ public:
 		  m2.comVelocity = normalVelocity2 + tangentVelocity;
 		  m1.angVelocity = m1.angVelocity - contactNormal * m1.angVelocity.dot(contactNormal);
 		  m2.angVelocity = m2.angVelocity - contactNormal * m2.angVelocity.dot(contactNormal);
-	  }
+	  }*/
   }
   
   /*********************************************************************
@@ -549,8 +589,9 @@ public:
     RowVector3d contactNormal, penPosition;
 	for (int i = 0; i < meshes.size(); i++)
 		for (int j = i + 1; j < meshes.size(); j++) {
-			if (meshes[i].isCollide(meshes[j], depth, contactNormal, penPosition))
+			if (meshes[i].isCollide(meshes[j], depth, contactNormal, penPosition)) {
 				handleCollision(meshes[i], meshes[j], depth, contactNormal, penPosition, CRCoeff, timeStep);
+			}
 		}
 
 	//int checkingDistance = 30, loop = 0, maxloops = 500;

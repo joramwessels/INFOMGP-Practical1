@@ -335,6 +335,8 @@ int main(int argc, char *argv[])
   scene.loadScene(std::string(argv[1]),std::string(argv[2]));
 
   scene.updateScene(0.0, CRCoeff);
+
+  scene.meshes[0].isPoolTable = true;
   
   // Viewer Settings
   for (int i=0;i<scene.meshes.size();i++){
