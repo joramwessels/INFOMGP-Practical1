@@ -17,7 +17,7 @@ float timeStep = 0.02;
 float CRCoeff= 1.0;
 string projectileFile = "sphere.mesh";
 string dataPath = "../data";
-float projectileDensity = 2.5;
+float projectileDensity = 1.5;
 
 Scene scene;
 

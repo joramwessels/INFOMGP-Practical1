@@ -159,7 +159,7 @@ public:
   
   //Updating velocity *instantaneously*. i.e., not integration from acceleration, but as a result of a collision impulse from the "impulses" list
   //You need to modify this for that purpose.
-  void updateImpulseVelocities(){
+  void updateImpulseVelocities(double timeStep){
     
     if (isFixed){
       comVelocity.setZero();
@@ -169,7 +169,8 @@ public:
     }
     
     //updating linear and angular velocity according to all impulses
-	Vector3d jn, torque, r;
+	RowVector3d jn; 
+	Vector3d torque, r;
 	Matrix3d currInvIT = getCurrInvInertiaTensor();
 	int forceCount = currImpulses.size();
 	for (int i = 0; i < forceCount; i++)
@@ -241,8 +242,8 @@ public:
       return;
     
     //integrating external forces (drag and gravity)
-	Vector3d gravity; gravity << 0, -9.8, 0.0;
-	comVelocity += gravity * timeStep;
+	RowVector3d gravity; gravity << 0, -9.81, 0.0;
+	comVelocity += gravity  * timeStep;
 	comVelocity -= dragCoeff * comVelocity * timeStep;
 	angVelocity -= dragCoeff * angVelocity * timeStep;
   }
@@ -322,12 +323,10 @@ public:
 		}
 
 		if (verDir[1] < 0) verDir *= -1;
-		cout << horDir << endl << verDir << endl;
 		corners << pos + height * verDir + width / 2 * horDir,
 			pos + height * verDir - width / 2 * horDir,
 			pos + width / 2 * horDir,
 			pos - width / 2 * horDir;
-		cout << corners << endl;
 		RowVector3d diagonal = corners.row(3) - corners.row(0);
 		stretchPoint << corners.row(0) + diagonal / 2;
 		restLength1 = diagonal.norm() * restLength;
@@ -387,7 +386,7 @@ public:
 			if (force.dot(stretchPointVelocity) < 0) { looseProjectile(); return; }
 
 			stretchPointVelocity += force * timeStep / projectile->totalMass;
-			stretchPointVelocity += Vector3d(0, -9.81, 0) * timeStep;
+			stretchPointVelocity += RowVector3d(0, -9.81, 0) * timeStep;
 			stretchPoint += stretchPointVelocity * timeStep;
 		}
 		updateProjectilePosition();
@@ -431,7 +430,7 @@ public:
   //adding an objects. You do not need to update this generally
   void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation, RowVector3d color){
     
-    Mesh m(V,F, T, density, isFixed, COM, orientation, color);
+    Mesh m(V, F, T, density, isFixed, COM, orientation, color);
     meshes.push_back(m);
   }
   
@@ -443,10 +442,12 @@ public:
    penPosition: a point on m2 such that if m2 <= m2 + depth*contactNormal, then penPosition+depth*contactNormal is the common contact point
    CRCoeff: the coefficient of restitution
    *********************************************************************/
-  void handleCollision(Mesh& m1, Mesh& m2, const double& depth, const RowVector3d& contactNormal, const RowVector3d& penPosition, const double CRCoeff) {
+  void handleCollision(Mesh& m1, Mesh& m2, const double& depth, const RowVector3d& contactNormal, const RowVector3d& penPosition, const double CRCoeff, double timeStep) {
 
 	  //std::cout << "contactNormal: " << contactNormal << std::endl;
 	  //std::cout << "penPosition: " << penPosition << std::endl;
+	  //std::cout << "depth: " << depth << std::endl;
+	  //std::cout << "m2.comVelocity: " << m2.comVelocity << std::endl;
 	  //std::cout<<"handleCollision begin"<<std::endl;
 
 	  //Interpretation resolution: move each object by inverse mass weighting, unless either is fixed, and then move the other. Remember to respect the direction of contactNormal and update penPosition accordingly.
@@ -480,9 +481,6 @@ public:
 	  collisionSpeed = (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal);
 	  if (collisionSpeed < jitterTolerance) return;
 
-	  //float j = (1 + CRCoeff) * (m1.comVelocity - m2.comVelocity).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass));
-	  //float j = (1 + CRCoeff) * (totalClosingVelocity1 - totalClosingVelocity2).dot(contactNormal) / ((1 / m1.totalMass) + (1 / m2.totalMass) 
-		//  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
 	  float j = (1 + CRCoeff) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) 
 		  + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
 
@@ -494,6 +492,7 @@ public:
 	  bool noSliding = (slidingVelocity - frictionImpulse /*/ (m1.totalMass <= m2.totalMass ? m1.totalMass : m2.totalMass)*/).dot(slidingVelocity) <= jitterTolerance;
 
 	  if (impulse.norm()>10e-6) {
+		  //cout << "impulse: " << impulse << endl;
 		  m1.currImpulses.push_back(Impulse(contactPosition, -impulse));
 		  m2.currImpulses.push_back(Impulse(contactPosition, impulse));
 		  //if (!noSliding) {
@@ -503,8 +502,8 @@ public:
 	  }
 
 	  //updating velocities according to impulses
-	  m1.updateImpulseVelocities();
-	  m2.updateImpulseVelocities();
+	  m1.updateImpulseVelocities(timeStep);
+	  m2.updateImpulseVelocities(timeStep);
 
 	  if (noSliding) {
 		  RowVector3d normalVelocity1 = contactNormal * m1.comVelocity.dot(contactNormal);
@@ -527,6 +526,16 @@ public:
    3. updating the visual scene in fullV and fullT
    *********************************************************************/
   void updateScene(double timeStep, double CRCoeff){
+
+	  //kill very small velocities
+	  for (int i = 0; i < meshes.size(); i++) {
+		  if (abs(meshes[i].comVelocity[0]) < 10e-6) meshes[i].comVelocity[0] = 0;
+		  if (abs(meshes[i].comVelocity[1]) < 10e-6) meshes[i].comVelocity[1] = 0;
+		  if (abs(meshes[i].comVelocity[2]) < 10e-6) meshes[i].comVelocity[2] = 0;
+		  if (abs(meshes[i].angVelocity[0]) < 10e-6) meshes[i].angVelocity[0] = 0;
+		  if (abs(meshes[i].angVelocity[1]) < 10e-6) meshes[i].angVelocity[1] = 0;
+		  if (abs(meshes[i].angVelocity[2]) < 10e-6) meshes[i].angVelocity[2] = 0;
+	  }
     
     //integrating velocity, position and orientation from forces and previous states
     for (int i=0;i<meshes.size();i++)
@@ -538,10 +547,11 @@ public:
     //This is done exhaustively: checking every two objects in the scene.
     double depth;
     RowVector3d contactNormal, penPosition;
-    for (int i=0;i<meshes.size();i++)
-      for (int j=i+1;j<meshes.size();j++)
-        if (meshes[i].isCollide(meshes[j], depth, contactNormal, penPosition))
-          handleCollision(meshes[i], meshes[j], depth, contactNormal, penPosition, CRCoeff);
+	for (int i = 0; i < meshes.size(); i++)
+		for (int j = i + 1; j < meshes.size(); j++) {
+			if (meshes[i].isCollide(meshes[j], depth, contactNormal, penPosition))
+				handleCollision(meshes[i], meshes[j], depth, contactNormal, penPosition, CRCoeff, timeStep);
+		}
 
 	//int checkingDistance = 30, loop = 0, maxloops = 500;
 	//for (int i = 0; i < meshes.size(); i++) for (int j = i + 1; j < meshes.size(); j++) {
@@ -596,7 +606,7 @@ public:
       tempF<<objF.col(2), objF.col(1), objF.col(0);
       objF=tempF;*/
       
-      addMesh(objV,objF, objT,density, isFixed, userCOM, userOrientation, color);
+      addMesh(objV, objF, objT,density, isFixed, userCOM, userOrientation, color);
       cout << "COM: " << userCOM <<endl;
       cout << "orientation: " << userOrientation <<endl;
     }
