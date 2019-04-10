@@ -217,25 +217,25 @@ bool key_pressed(igl::opengl::glfw::Viewer &viewer, unsigned int key, int modifi
 
 	if (key == 'd')
 	{
-		if (scene.catapult.aiming) scene.catapult.stretchPoint -= (scene.catapult.corners.row(1) - scene.catapult.corners.row(0)).normalized() * step;
+		if (scene.catapult.aiming) scene.catapult.stretchPoint += (scene.catapult.corners.row(1) - scene.catapult.corners.row(0)).normalized() * step;
 		return true;
 	}
 
 	if (key == 'a')
 	{
-		if (scene.catapult.aiming) scene.catapult.stretchPoint += (scene.catapult.corners.row(1) - scene.catapult.corners.row(0)).normalized() * step;
+		if (scene.catapult.aiming) scene.catapult.stretchPoint -= (scene.catapult.corners.row(1) - scene.catapult.corners.row(0)).normalized() * step;
 		return true;
 	}
 
 	if (key == 's')
 	{
-		if (scene.catapult.aiming) scene.catapult.stretchPoint += (scene.catapult.corners.row(2) - scene.catapult.corners.row(0)).normalized() * step;
+		if (scene.catapult.aiming) scene.catapult.stretchPoint += RowVector3d(0, -1, 0) * step;
 		return true;
 	}
 
 	if (key == 'w')
 	{
-		if (scene.catapult.aiming) scene.catapult.stretchPoint -= (scene.catapult.corners.row(2) - scene.catapult.corners.row(0)).normalized() * step;
+		if (scene.catapult.aiming) scene.catapult.stretchPoint += RowVector3d(0, 1, 0) * step;
 		return true;
 	}
 

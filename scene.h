@@ -410,7 +410,7 @@ public:
 	void update(double timeStep) {
 		if (projectile == NULL) return;
 		if (!aiming) {
-
+			
 			Vector3d force = getForce();
 			if (force.dot(stretchPointVelocity) < 0) { looseProjectile(); return; }
 
@@ -532,8 +532,8 @@ public:
 	  RowVector3d impulse;
 
 
-	  cout << "m2.comVelocity: " << m2.comVelocity << endl;
-	  cout << "m2.angVelocity: " << m2.angVelocity << endl;
+	  //cout << "m2.comVelocity: " << m2.comVelocity << endl;
+	  //cout << "m2.angVelocity: " << m2.angVelocity << endl;
 
 	  if (m1.isPoolTable && !m2.isFixed) {
 		  // Calculate vertical impulse
@@ -541,9 +541,9 @@ public:
 
 		  impulse = j * contactNormal;
 
-		  cout << "ja" << endl;
-		  cout << "impulse[1]/m2.totalMass: " << impulse[1] / m2.totalMass << endl;
-		  cout << "9.81 * timeStep: " << 9.81 * timeStep << endl;
+		  //cout << "ja" << endl;
+		  //cout << "impulse[1]/m2.totalMass: " << impulse[1] / m2.totalMass << endl;
+		  //cout << "9.81 * timeStep: " << 9.81 * timeStep << endl;
 
 		  if (impulse[1]/m2.totalMass <= 9.81 * timeStep) { // if m2 stays on pool table
 
@@ -672,7 +672,7 @@ public:
       return false;
     int numofObjects;
 
-	catapult = Catapult(catapultPos, Vector3d(0, 0, -1), catapultHeight, catapultWidth, catapultThickness, .8, 400);
+	catapult = Catapult(catapultPos, Vector3d(0, 0, -1), catapultHeight, catapultWidth, catapultThickness, .8, 500000);
     
     currTime=0;
     sceneFileHandle>>numofObjects;
