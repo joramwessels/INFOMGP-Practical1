@@ -137,6 +137,14 @@ public:
 	  //return R.transpose() * invIT * R;
   }
   
+  void teleport(Vector3d oldPos, Vector3d newPos)
+  {
+	  if (!isFixed) return; // this function bypasses physics
+
+	  COM += (newPos - oldPos);
+	  for (int i = 0; i < currV.rows(); i++) currV.row(i) << QRot(origV.row(i), orientation) + COM;
+	  
+  }
   
   //Update the current position and orientation by integrating the linear and angular velocities, and update currV accordingly
   //You need to modify this according to its purpose
@@ -310,28 +318,49 @@ public:
 class Catapult {
 public:
 	MatrixXd corners, stretchPoint;
-	RowVector3d stretchPointVelocity, orientation;
+	Vector3d orientation;
+	RowVector3d stretchPointVelocity, basePosition;
 	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
-	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength = 1, float K = 100) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
+	double width, height, thickness;
+
+	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, double thickness, float restLength = 1, float K = 100)
+		: corners(4, 3), stretchPoint(1, 3), height(height), width(width), thickness(thickness), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
 
 		RowVector3d horDir, verDir;
-		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 0, 1; }
+		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 1, 0; }
 		else {
 			horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
 			verDir = orientation.cross(horDir).normalized();
 		}
 
 		if (verDir[1] < 0) verDir *= -1;
-		corners << pos + height * verDir + width / 2 * horDir,
-			pos + height * verDir - width / 2 * horDir,
-			pos + width / 2 * horDir,
-			pos - width / 2 * horDir;
+		cout << horDir << endl << verDir << endl;
+		//corners << pos + height * verDir + width / 2 * horDir,
+		//	pos + height * verDir - width / 2 * horDir,
+		//	pos + width / 2 * horDir,
+		//	pos - width / 2 * horDir;
+		double secondString = 0.25, thck = cos(45) * thickness;
+		corners <<
+			//-width / 2 + thck, height + thck, 0.0, // upper left
+			// width / 2 - thck, height + thck, 0.0, // upper right
+			//-width * secondString + thck, height - width * secondString + thck, 0.0, // lower left
+			// width * secondString - thck, height - width * secondString + thck, 0.0; // lower right
+		//for (int i = 0; i < corners.rows(); i++) corners.row(i) += pos;
+			(height + thck) * verDir - (width * 0.5 - thck) * horDir + pos,
+			(height + thck) * verDir + (width * 0.5 - thck) * horDir + pos,
+			(height - width * secondString + thck) * verDir - (width * secondString - thck) * horDir + pos,
+			(height - width * secondString + thck) * verDir + (width * secondString - thck) * horDir + pos;
+		cout << corners << endl;
 		RowVector3d diagonal = corners.row(3) - corners.row(0);
-		stretchPoint << corners.row(0) + diagonal / 2;
-		restLength1 = diagonal.norm() * restLength;
-		restLength2 = diagonal.norm() * restLength;
+		//stretchPoint << corners.row(0) + diagonal / 2;
+		//restLength1 = diagonal.norm() * restLength;
+		//restLength2 = diagonal.norm() * restLength;
+		stretchPoint << corners.row(0) + diagonal * (corners.row(0) - corners.row(1)).norm() / ((corners.row(0) - corners.row(1)).norm() + (corners.row(2) - corners.row(3)).norm());
+		restLength1 = (corners.row(0) - corners.row(3)).norm() * restLength;
+		restLength1 = (corners.row(1) - corners.row(2)).norm() * restLength;
+		basePosition = RowVector3d(0.0, 0.0, 0.0);
 	}
 
 	//Mesh(const MatrixXd& _V, const MatrixXi& _F, const MatrixXi& _T, const double density, const bool _isFixed, const RowVector3d& _COM, const RowVector4d& _orientation)
@@ -374,7 +403,7 @@ public:
 	}
 
 	void updateProjectilePosition() {
-		projectile->COM = stretchPoint;
+		projectile->COM = stretchPoint + RowVector3d(0.0, 0.0, -7.0); // TODO hardcoded
 		for (int i = 0; i < projectile->currV.rows(); i++)
 			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
 	}
@@ -414,9 +443,27 @@ public:
 		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
 	}
 
-	void move(Vector3d basePosition, Vector3d orientation)
+	void move(RowVector3d _basePosition, Mesh* mesh1, Mesh* mesh2, Mesh* mesh3)
 	{
-		return;
+		_basePosition(1) = 0.0;
+		mesh1->teleport(basePosition, _basePosition);
+		mesh2->teleport(basePosition, _basePosition);
+		mesh3->teleport(basePosition, _basePosition);
+
+		RowVector3d posChange = _basePosition - basePosition;
+		corners.row(0) += posChange;
+		corners.row(1) += posChange;
+		corners.row(2) += posChange;
+		corners.row(3) += posChange;
+		stretchPoint += posChange;
+		basePosition = _basePosition;
+	}
+
+	void rotate(Vector4d _orientation)
+	{
+		// TODO
+		// - rotate orientation
+		// - rotate all 3 meshes around the base mesh (mesh[0])
 	}
 };
 
@@ -427,6 +474,7 @@ public:
   int numFullV, numFullT;
   std::vector<Mesh> meshes;
   Catapult catapult;
+  int cueBallIndex;
   
   //adding an objects. You do not need to update this generally
   void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation, RowVector3d color){
@@ -617,7 +665,7 @@ public:
   
   //loading a scene from the scene .txt files
   //you do not need to update this function
-  bool loadScene(const std::string dataFolder, const std::string sceneFileName){
+  bool loadScene(const std::string dataFolder, const std::string sceneFileName, Vector3d catapultPos, double catapultHeight, double catapultWidth, double catapultThickness){
     
     ifstream sceneFileHandle;
     sceneFileHandle.open(dataFolder+std::string("/")+sceneFileName);
@@ -625,7 +673,7 @@ public:
       return false;
     int numofObjects;
 
-	catapult = Catapult(Vector3d(-100, 0, 0), Vector3d(1,.2,0), 100, 150, .8, 400);
+	catapult = Catapult(catapultPos, Vector3d(0, 0, -1), catapultHeight, catapultWidth, catapultThickness, .8, 400);
     
     currTime=0;
     sceneFileHandle>>numofObjects;
