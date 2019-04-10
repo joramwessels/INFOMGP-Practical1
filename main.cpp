@@ -81,42 +81,86 @@ void updateMeshes(igl::opengl::glfw::Viewer &viewer)
   //viewer.core.align_camera_center(scene.meshes[0].currV);
 }
 
+bool key_pressed(igl::opengl::glfw::Viewer &viewer, unsigned int key, int modifier)
+{
+	float step = 1;
+
+	if (key == 'q')
+	{
+		if (scene.catapult.aiming) scene.catapult.stretchPoint -= scene.catapult.orientation * step;
+		return true;
+	}
+
+	if (key == 'e')
+	{
+		if (scene.catapult.aiming) scene.catapult.stretchPoint += scene.catapult.orientation * step;
+		return true;
+	}
+
+	if (key == 'd')
+	{
+		if (scene.catapult.aiming) scene.catapult.stretchPoint -= (scene.catapult.corners.row(1) - scene.catapult.corners.row(0)).normalized() * step;
+		return true;
+	}
+
+	if (key == 'a')
+	{
+		if (scene.catapult.aiming) scene.catapult.stretchPoint += (scene.catapult.corners.row(1) - scene.catapult.corners.row(0)).normalized() * step;
+		return true;
+	}
+
+	if (key == 's')
+	{
+		if (scene.catapult.aiming) scene.catapult.stretchPoint += (scene.catapult.corners.row(2) - scene.catapult.corners.row(0)).normalized() * step;
+		return true;
+	}
+
+	if (key == 'w')
+	{
+		if (scene.catapult.aiming) scene.catapult.stretchPoint -= (scene.catapult.corners.row(2) - scene.catapult.corners.row(0)).normalized() * step;
+		return true;
+	}
+
+	return false;
+}
+
 bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier)
 {
-  if (key == ' ')
-  {
-    viewer.core.is_animating = !viewer.core.is_animating;
-    if (viewer.core.is_animating)
-      cout<<"Simulation running"<<endl;
-    else
-      cout<<"Simulation paused"<<endl;
-    return true;
-  }
+	if (key == ' ')
+	{
+		viewer.core.is_animating = !viewer.core.is_animating;
+		if (viewer.core.is_animating)
+			cout << "Simulation running" << endl;
+		else
+			cout << "Simulation paused" << endl;
+		return true;
+	}
 
-  if (key == 'S')
-  {
-	  if (!viewer.core.is_animating) {
-		  scene.updateScene(timeStep, CRCoeff);
-		  currTime += timeStep;
-		  updateMeshes(viewer);
-		  std::cout << "currTime: " << currTime << std::endl;
-		  return true;
-	  }
-  }
+	if (key == 'N')
+	{
+		if (!viewer.core.is_animating) {
+			scene.updateScene(timeStep, CRCoeff);
+			currTime += timeStep;
+			updateMeshes(viewer);
+			std::cout << "currTime: " << currTime << std::endl;
+			return true;
+		}
+	}
 
-  if (key == 'C')
-  {
-	  if (scene.catapult.aiming) scene.catapult.shoot();
-	  else if (scene.catapult.projectile == NULL) {
-		  MatrixXi objT, objF;
-		  MatrixXd objV;
-		  igl::readMESH(dataPath + std::string("/") + projectileFile, objV, objT, objF);
-		  scene.addMesh(objV, objF.rowwise().reverse(), objT, projectileDensity, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0));
-		  viewer.append_mesh();
-		  scene.catapult.fill(&scene.meshes.back());
-	  }
-  }
-  return false;
+	if (key == 'C')
+	{
+		if (scene.catapult.aiming) scene.catapult.shoot();
+		else if (scene.catapult.projectile == NULL) {
+			MatrixXi objT, objF;
+			MatrixXd objV;
+			igl::readMESH(dataPath + std::string("/") + projectileFile, objV, objT, objF);
+			scene.addMesh(objV, objF.rowwise().reverse(), objT, projectileDensity, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0));
+			viewer.append_mesh();
+			scene.catapult.fill(&scene.meshes.back());
+			return true;
+		}
+	}
+	return false;
 }
 
 
@@ -136,14 +180,6 @@ bool pre_draw(igl::opengl::glfw::Viewer &viewer)
 
 	//cout << "scene.catapult.corners" << endl << scene.catapult.corners << endl << "scene.catapult.stretchPoint" << endl << scene.catapult.stretchPoint << endl;
 	viewer.data().add_edges(scene.catapult.corners, scene.catapult.stretchPoint.replicate(4,1), Eigen::RowVector3d(0, 0, 255));
-
-	return false;
-}
-
-bool post_draw(igl::opengl::glfw::Viewer &viewer)
-{
-	using namespace Eigen;
-	using namespace std;
 
 	return false;
 }
@@ -213,8 +249,8 @@ int main(int argc, char *argv[])
   //mgpViewer.core.align_camera_center(scene.meshes[0].currV);
   
   mgpViewer.callback_pre_draw = &pre_draw;
-  mgpViewer.callback_post_draw = &post_draw;
   mgpViewer.callback_key_down = &key_down;
+  mgpViewer.callback_key_pressed = &key_pressed;
   mgpViewer.core.is_animating = false;
   mgpViewer.core.animation_max_fps = 50.;
   updateMeshes(mgpViewer);
