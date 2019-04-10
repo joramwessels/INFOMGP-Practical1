@@ -50,6 +50,9 @@ public:
   
   //dynamics
   std::vector<Impulse> currImpulses;  //current list of impulses, updated by collision handling
+
+  //Project variables
+  RowVector3d color;
   
   //checking collision between bounding boxes, and consequently the boundary tets if succeeds.
   //you do not need to update these functions (isBoxCollide and isCollide) unless you are doing a different collision
@@ -253,7 +256,7 @@ public:
   }
   
   
-  Mesh(const MatrixXd& _V, const MatrixXi& _F, const MatrixXi& _T, const double density, const bool _isFixed, const RowVector3d& _COM, const RowVector4d& _orientation){
+  Mesh(const MatrixXd& _V, const MatrixXi& _F, const MatrixXi& _T, const double density, const bool _isFixed, const RowVector3d& _COM, const RowVector4d& _orientation, RowVector3d _color){
     origV=_V;
     F=_F;
     T=_T;
@@ -262,6 +265,7 @@ public:
     orientation=_orientation;
     comVelocity.setZero();
     angVelocity.setZero();
+	color = _color;
     
     RowVector3d naturalCOM;  //by the geometry of the object
     
@@ -409,6 +413,11 @@ public:
 		stretchPointVelocity = Vector3d(0, 0, 0);
 		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
 	}
+
+	void move(Vector3d basePosition, Vector3d orientation)
+	{
+		return;
+	}
 };
 
 //This class contains the entire scene operations, and the engine time loop.
@@ -420,9 +429,9 @@ public:
   Catapult catapult;
   
   //adding an objects. You do not need to update this generally
-  void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation){
+  void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation, RowVector3d color){
     
-    Mesh m(V,F, T, density, isFixed, COM, orientation);
+    Mesh m(V,F, T, density, isFixed, COM, orientation, color);
     meshes.push_back(m);
   }
   
@@ -577,16 +586,17 @@ public:
       double youngModulus, poissonRatio, density;
       RowVector3d userCOM;
       RowVector4d userOrientation;
-      sceneFileHandle>>MESHFileName>>density>>youngModulus>>poissonRatio>>isFixed>>userCOM(0)>>userCOM(1)>>userCOM(2)>>userOrientation(0)>>userOrientation(1)>>userOrientation(2)>>userOrientation(3);
+	  RowVector3d color;
+      sceneFileHandle>>MESHFileName>>density>>youngModulus>>poissonRatio>>isFixed>>userCOM(0)>>userCOM(1)>>userCOM(2)>>userOrientation(0)>>userOrientation(1)>>userOrientation(2)>>userOrientation(3)>>color(0)>>color(1)>>color(2);
       userOrientation.normalize();
       igl::readMESH(dataFolder+std::string("/")+MESHFileName,objV,objT, objF);
       
       //fixing weird orientation problem
-      MatrixXi tempF(objF.rows(),3);
+      /*MatrixXi tempF(objF.rows(),3);
       tempF<<objF.col(2), objF.col(1), objF.col(0);
-      objF=tempF;
+      objF=tempF;*/
       
-      addMesh(objV,objF, objT,density, isFixed, userCOM, userOrientation);
+      addMesh(objV,objF, objT,density, isFixed, userCOM, userOrientation, color);
       cout << "COM: " << userCOM <<endl;
       cout << "orientation: " << userOrientation <<endl;
     }
