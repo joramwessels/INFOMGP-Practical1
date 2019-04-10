@@ -318,7 +318,7 @@ public:
 class Catapult {
 public:
 	MatrixXd corners, stretchPoint;
-	RowVector3d stretchPointVelocity, basePosition, orientation;
+	RowVector3d stretchPointVelocity, orientation, basePosition;
 	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
@@ -335,7 +335,7 @@ public:
 		}
 
 		if (verDir[1] < 0) verDir *= -1;
-		cout << horDir << endl << verDir << endl;
+		//cout << horDir << endl << verDir << endl;
 		//corners << pos + height * verDir + width / 2 * horDir,
 		//	pos + height * verDir - width / 2 * horDir,
 		//	pos + width / 2 * horDir,
@@ -404,7 +404,7 @@ public:
 	void updateProjectilePosition() {
 		projectile->COM = stretchPoint + RowVector3d(0.0, 0.0, -7.0); // TODO hardcoded
 		for (int i = 0; i < projectile->currV.rows(); i++)
-			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
+			projectile->currV.row(i) = QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
 	}
 
 	void update(double timeStep) {
@@ -537,7 +537,7 @@ public:
 
 	  if (m1.isPoolTable && !m2.isFixed) {
 		  // Calculate vertical impulse
-		  float j = (1 + CRCoeff * 0.1) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
+		  float j = (1 + CRCoeff * 0.001) * collisionSpeed / ((1 / m1.totalMass) + (1 / m2.totalMass) + (r1crossn.transpose() * m1.invIT * r1crossn + r2crossn.transpose() * m2.invIT * r2crossn).norm()); // augmented j (Lecture 4 : Slide 29)
 
 		  impulse = j * contactNormal;
 
@@ -554,7 +554,7 @@ public:
 			  RowVector3d normalCOMVel = contactNormal * m2.comVelocity.dot(contactNormal);
 			  RowVector3d tanCOMVel = m2.comVelocity - normalCOMVel;
 
-			  RowVector3d totaltanCOMVel = tanCOMVel + contactNormal.cross(tanAngVel); // !!!!!!!!!!!
+			  RowVector3d totaltanCOMVel = tanCOMVel;// + contactNormal.cross(tanAngVel); // !!!!!!!!!!!
 			  
 			  // Apply energy loss to tan comVelocity (rolling)
 			  totaltanCOMVel *= 0.99;
@@ -563,7 +563,7 @@ public:
 			  normalAngVel *= 0.8;
 
 			  // Recompose com- and angVelocity
-			  m2.angVelocity = totaltanCOMVel.cross(contactNormal) / 2;// +normalAngVel; // !!!!!!!!!!!
+			  m2.angVelocity = contactNormal.cross(totaltanCOMVel) / 2;// +normalAngVel; // !!!!!!!!!!!
 			  m2.comVelocity = totaltanCOMVel + normalCOMVel;
 		  }
 	  }

@@ -163,6 +163,7 @@ void createAndAddCatapult(RowVector3d pos, double height, double width, double t
 	baseV = cylV; stickV = cylV;
 
 	// Base
+
 	baseV.col(0) *= thickness * relBaseThickness;
 	baseV.col(1) *= thickness * relBaseThickness;
 	baseV.col(2) *= length * relBaseLength;
@@ -365,7 +366,7 @@ int main(int argc, char *argv[])
 
   scene.updateScene(0.0, CRCoeff);
 
-  scene.meshes[0].isPoolTable = true;
+  scene.meshes[3].isPoolTable = true;
   
   // Viewer Settings
   for (int i=0;i<scene.meshes.size();i++){
