@@ -308,7 +308,8 @@ public:
 class Catapult {
 public:
 	MatrixXd corners, stretchPoint;
-	Vector3d orientation, stretchPointVelocity;
+	Vector3d orientation;
+	RowVector3d stretchPointVelocity;
 	float restLength1, restLength2, K1, K2;
 	Mesh* projectile = NULL;
 	bool aiming = false;
@@ -412,6 +413,11 @@ public:
 
 		stretchPointVelocity = Vector3d(0, 0, 0);
 		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
+	}
+
+	void move(Vector3d basePosition, Vector3d orientation)
+	{
+		return;
 	}
 };
 
