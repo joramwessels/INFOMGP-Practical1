@@ -359,7 +359,7 @@ public:
 		//restLength2 = diagonal.norm() * restLength;
 		stretchPoint << corners.row(0) + diagonal * (corners.row(0) - corners.row(1)).norm() / ((corners.row(0) - corners.row(1)).norm() + (corners.row(2) - corners.row(3)).norm());
 		restLength1 = (corners.row(0) - corners.row(3)).norm() * restLength;
-		restLength1 = (corners.row(1) - corners.row(2)).norm() * restLength;
+		restLength2 = (corners.row(1) - corners.row(2)).norm() * restLength;
 		basePosition = RowVector3d(0.0, 0.0, 0.0);
 	}
 
