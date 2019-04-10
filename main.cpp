@@ -142,20 +142,38 @@ void createPoolTable(RowVector3d position, double width=100.0, double length=200
 	platColor.push_back(brown);
 }
 
-void createAndAddCatapult(double height, double width, std::string meshFile="cylinder.mesh")
+// Creates the catapult mesh
+// The angle of the sticks is hardcoded at 45 degrees each
+void createAndAddCatapult(RowVector3d pos, double height, double width)
 {
-	double thickness = 0.8, length = 2.3, cylLength = 17.0 * length;
-	double rotHeight = cos(45) * cylLength * 0.5;
+	// Some parameters
+	double cylMeshLength = 14.0; // approximated by looking at .mesh file
+	double relBaseThickness = 1.3, relBaseLength = 0.8;
+	double thickness = 0.8, length = 2.8, cylLength = cylMeshLength * length;
 	RowVector3d catapultBrown = RowVector3d(0.46, 0.29, 0.1);
+
+	// Reading the mesh file
 	MatrixXi cylT, cylF;
-	MatrixXd cylV;
-	igl::readMESH(dataPath + std::string("/") + meshFile, cylV, cylT, cylF);
-	cylV.col(0) *= thickness;
-	cylV.col(1) *= thickness;
-	cylV.col(2) *= length;
-	scene.addMesh(cylV, cylF.rowwise().reverse(), cylT, 10000.0, true, RowVector3d(0.0, cylLength * 0.5, 0.0), RowVector4d(0, 0, 0.7071068, 0.7071068), catapultBrown); // base
-	scene.addMesh(cylV, cylF.rowwise().reverse(), cylT, 10000.0, true, RowVector3d(rotHeight, cylLength + rotHeight, 0.0), RowVector4d(0.2705981, 0.2705981, 0.6532815, 0.6532815), catapultBrown); // left
-	scene.addMesh(cylV, cylF.rowwise().reverse(), cylT, 10000.0, true, RowVector3d(-rotHeight, cylLength + rotHeight, 0.0), RowVector4d(-0.2705981, -0.2705981, 0.6532815, 0.6532815), catapultBrown); // right
+	MatrixXd cylV, baseV, stickV;
+	igl::readMESH(dataPath + std::string("/") + "cylinder.mesh", cylV, cylT, cylF);
+	baseV = cylV; stickV = cylV;
+
+	// Base
+	baseV.col(0) *= thickness * relBaseThickness;
+	baseV.col(1) *= thickness * relBaseThickness;
+	baseV.col(2) *= length * relBaseLength;
+	RowVector4d straightUp = RowVector4d(0, 0, 0.7071068, 0.7071068);
+	scene.addMesh(baseV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d(0.0, cylLength * 0.5 * relBaseLength, 0.0), straightUp, catapultBrown);
+
+	// Sticks
+	stickV.col(0) *= thickness;
+	stickV.col(1) *= thickness;
+	stickV.col(2) *= length;
+	double rotHeight = cos(45) * cylLength * 0.5;
+	RowVector4d leftRot = RowVector4d(0.2705981, 0.2705981, 0.6532815, 0.6532815);
+	RowVector4d rightRot = RowVector4d(-0.2705981, -0.2705981, 0.6532815, 0.6532815);
+	scene.addMesh(stickV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d( rotHeight, cylLength + rotHeight, 0.0), leftRot, catapultBrown);  // left
+	scene.addMesh(stickV, cylF.rowwise().reverse(), cylT, 10000.0, true, pos + RowVector3d(-rotHeight, cylLength + rotHeight, 0.0), rightRot, catapultBrown); // right
 }
 
 void updateMeshes(igl::opengl::glfw::Viewer &viewer)
@@ -294,9 +312,9 @@ int main(int argc, char *argv[])
   cout<<"scene file: "<<std::string(argv[2])<<endl;
 
   // Initializing pool table and catapult
-  createAndAddCatapult(5.0, 2.5); // these need to be the first three meshes
-  double thickness = 5.0;
-  createPoolTable(Eigen::Vector3d(0.0, 0.0 - thickness, 0.0), 100.0, 200.0, thickness);
+  double tableThickness = 5.0;
+  createAndAddCatapult(RowVector3d(0.0, tableThickness, 0.0), 5.0, 2.5); // these need to be the first three meshes
+  createPoolTable(Eigen::Vector3d(0.0, 0.0 - tableThickness, 0.0), 100.0, 200.0, tableThickness);
   for (int i = 0; i < platV.size(); i++)
 	scene.addMesh(platV[i], boxF, boxT, 10000.0, true, platCOM[i], boxOrientation, platColor[i]);
 
