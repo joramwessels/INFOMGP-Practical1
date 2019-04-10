@@ -12,12 +12,12 @@
 using namespace Eigen;
 using namespace std;
 
-
 void support(const void *_obj, const ccd_vec3_t *_d, ccd_vec3_t *_p);
 void stub_dir(const void *obj1, const void *obj2, ccd_vec3_t *dir);
 void center(const void *_obj, ccd_vec3_t *dir);
 
 float dragCoeff = 0;
+float frictionCoeff = 0;
 
 //Impulse is defined as a pair <position, direction>
 typedef std::pair<RowVector3d,RowVector3d> Impulse;
@@ -300,8 +300,119 @@ public:
     for (int i=0;i<boundTets.size();i++)
       boundTets(i)=boundTList[i];
   }
-  
-  ~Mesh(){}
+
+  Mesh() {}
+  ~Mesh() {}
+};
+
+class Catapult {
+public:
+	MatrixXd corners, stretchPoint;
+	Vector3d orientation, stretchPointVelocity;
+	float restLength1, restLength2, K1, K2;
+	Mesh* projectile = NULL;
+	bool aiming = false;
+	Catapult(RowVector3d pos, RowVector3d orient, double height, double width, float restLength = 1, float K = 100) : corners(4, 3), stretchPoint(1, 3), orientation(orient.normalized()), stretchPointVelocity(0, 0, 0), K1(K), K2(K) {
+
+		RowVector3d horDir, verDir;
+		if (orientation[1] == 1) { horDir << 1, 0, 0; verDir << 0, 0, 1; }
+		else {
+			horDir = orientation.cross(RowVector3d(0, 1, 0)).normalized();
+			verDir = orientation.cross(horDir).normalized();
+		}
+
+		if (verDir[1] < 0) verDir *= -1;
+		cout << horDir << endl << verDir << endl;
+		corners << pos + height * verDir + width / 2 * horDir,
+			pos + height * verDir - width / 2 * horDir,
+			pos + width / 2 * horDir,
+			pos - width / 2 * horDir;
+		cout << corners << endl;
+		RowVector3d diagonal = corners.row(3) - corners.row(0);
+		stretchPoint << corners.row(0) + diagonal / 2;
+		restLength1 = diagonal.norm() * restLength;
+		restLength2 = diagonal.norm() * restLength;
+	}
+
+	//Mesh(const MatrixXd& _V, const MatrixXi& _F, const MatrixXi& _T, const double density, const bool _isFixed, const RowVector3d& _COM, const RowVector4d& _orientation)
+	Catapult() : corners(4, 3), stretchPoint(1, 3), orientation(1, 0, 0), stretchPointVelocity(0, 0, 0) {
+		corners << 0, 50, 50,
+			0, 50, -50,
+			0, -50, 50,
+			0, -50, -50;
+		RowVector3d diagonal = corners.row(3) - corners.row(0);
+		stretchPoint << corners.row(0) + diagonal / 2;
+		restLength1 = diagonal.norm();
+		restLength2 = diagonal.norm();
+	}
+
+	MatrixXd getForces() {
+		Vector3d part1 = (corners.row(0) - stretchPoint);
+		Vector3d part2 = (corners.row(1) - stretchPoint);
+		Vector3d part3 = (corners.row(2) - stretchPoint);
+		Vector3d part4 = (corners.row(3) - stretchPoint);
+		double l1 = part1.norm();
+		double l2 = part2.norm();
+		double l3 = part3.norm();
+		double l4 = part4.norm();
+		RowVector3d restPos1 = corners.row(0) + (corners.row(3) - corners.row(0)) * l1 / (l1 + l4);
+		RowVector3d restPos2 = corners.row(1) + (corners.row(2) - corners.row(1)) * l2 / (l2 + l3);
+		RowVector3d dir1 = (restPos1 - stretchPoint).normalized();
+		RowVector3d dir2 = (restPos2 - stretchPoint).normalized();
+		//RowVector3d dir1 = (part1 / l1 + part4 / l4).normalized();
+		//RowVector3d dir2 = (part2 / l2 + part3 / l3).normalized();
+		double mag1 = K1 * ((l1 + l4) - restLength1);
+		double mag2 = K2 * ((l2 + l3) - restLength2);
+		MatrixXd forces(2, 3);
+		forces << dir1 * mag1, dir2 * mag2;
+		return forces;
+	}
+
+	Vector3d getForce() {
+		MatrixXd forces = getForces();
+		return Vector3d(forces.col(0).sum(), forces.col(1).sum(), forces.col(2).sum());
+	}
+
+	void updateProjectilePosition() {
+		projectile->COM = stretchPoint;
+		for (int i = 0; i < projectile->currV.rows(); i++)
+			projectile->currV.row(i) << QRot(projectile->origV.row(i), projectile->orientation) + projectile->COM;
+	}
+
+	void update(double timeStep) {
+		if (projectile == NULL) return;
+		if (!aiming) {
+
+			Vector3d force = getForce();
+			if (force.dot(stretchPointVelocity) < 0) { looseProjectile(); return; }
+
+			stretchPointVelocity += force * timeStep / projectile->totalMass;
+			stretchPointVelocity += Vector3d(0, -9.81, 0) * timeStep;
+			stretchPoint += stretchPointVelocity * timeStep;
+		}
+		updateProjectilePosition();
+	}
+
+	void fill(Mesh* mesh) {
+		aiming = true;
+
+		projectile = mesh;
+		projectile->isFixed = true;
+		updateProjectilePosition();
+	}
+
+	void shoot() {
+		aiming = false;
+	}
+
+	void looseProjectile() {
+		projectile->isFixed = false;
+		projectile->comVelocity = stretchPointVelocity;
+		projectile = NULL;
+
+		stretchPointVelocity = Vector3d(0, 0, 0);
+		stretchPoint = corners.row(0) + (corners.row(3) - corners.row(0)) / 2;
+	}
 };
 
 //This class contains the entire scene operations, and the engine time loop.
@@ -310,6 +421,7 @@ public:
   double currTime;
   int numFullV, numFullT;
   std::vector<Mesh> meshes;
+  Catapult catapult;
   
   //adding an objects. You do not need to update this generally
   void addMesh(const MatrixXd& V, const MatrixXi& F, const MatrixXi& T, const double density, const bool isFixed, const RowVector3d& COM, const RowVector4d& orientation, RowVector3d color){
@@ -348,10 +460,6 @@ public:
 	  posCorrection2 = contactNormal * m2MoveBack;
 	  contactPosition = penPosition + posCorrection2;
 
-	  std::cout << "contactPosition: " << contactPosition << std::endl;
-	  std::cout << "m1.COM: " << m1.COM << std::endl;
-	  std::cout << "m2.COM: " << m2.COM << std::endl;
-
 	  m1.COM += posCorrection1;
 	  m2.COM += posCorrection2;
 	  for (int i = 0; i < m1.currV.rows(); i++) m1.currV.row(i) += posCorrection1;
@@ -375,17 +483,36 @@ public:
 
 	  RowVector3d impulse = j * contactNormal;  //change this to your result
 
-	  //std::cout << "impulse: " << impulse << std::endl;
+	  // Find friction force
+	  RowVector3d slidingVelocity = RowVector3d(totalClosingVelocity2 - totalClosingVelocity1) + contactNormal * collisionSpeed;
+	  RowVector3d frictionImpulse = j * frictionCoeff * slidingVelocity.normalized();
+	  bool noSliding = (slidingVelocity - frictionImpulse /*/ (m1.totalMass <= m2.totalMass ? m1.totalMass : m2.totalMass)*/).dot(slidingVelocity) <= jitterTolerance;
+
 	  if (impulse.norm()>10e-6) {
 		  m1.currImpulses.push_back(Impulse(contactPosition, -impulse));
 		  m2.currImpulses.push_back(Impulse(contactPosition, impulse));
+		  //if (!noSliding) {
+			  //m1.currImpulses.push_back(Impulse(contactPosition, -frictionImpulse));
+			  //m2.currImpulses.push_back(Impulse(contactPosition, frictionImpulse));
+		  //}
 	  }
-
-	  //std::cout<<"handleCollision end"<<std::endl;
 
 	  //updating velocities according to impulses
 	  m1.updateImpulseVelocities();
 	  m2.updateImpulseVelocities();
+
+	  if (noSliding) {
+		  RowVector3d normalVelocity1 = contactNormal * m1.comVelocity.dot(contactNormal);
+		  RowVector3d normalVelocity2 = contactNormal * m2.comVelocity.dot(contactNormal);
+		  RowVector3d tangentVelocity;
+		  if (m2.isFixed) tangentVelocity = m2.comVelocity - normalVelocity2;
+		  else if (m1.isFixed) tangentVelocity = m1.comVelocity - normalVelocity1;
+		  else tangentVelocity = ((m1.comVelocity - normalVelocity1) * m1.totalMass + (m2.comVelocity - normalVelocity2) * m2.totalMass) / (m1.totalMass + m2.totalMass);
+		  m1.comVelocity = normalVelocity1 + tangentVelocity;
+		  m2.comVelocity = normalVelocity2 + tangentVelocity;
+		  m1.angVelocity = m1.angVelocity - contactNormal * m1.angVelocity.dot(contactNormal);
+		  m2.angVelocity = m2.angVelocity - contactNormal * m2.angVelocity.dot(contactNormal);
+	  }
   }
   
   /*********************************************************************
@@ -399,6 +526,8 @@ public:
     //integrating velocity, position and orientation from forces and previous states
     for (int i=0;i<meshes.size();i++)
       meshes[i].integrate(timeStep);
+
+	catapult.update(timeStep);
     
     //detecting and handling collisions when found
     //This is done exhaustively: checking every two objects in the scene.
@@ -439,6 +568,8 @@ public:
     if (!sceneFileHandle.is_open())
       return false;
     int numofObjects;
+
+	catapult = Catapult(Vector3d(-100, 0, 0), Vector3d(1,.2,0), 100, 150, .8, 400);
     
     currTime=0;
     sceneFileHandle>>numofObjects;

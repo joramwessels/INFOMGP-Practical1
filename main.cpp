@@ -15,6 +15,9 @@ float currTime = 0;
 //initial values
 float timeStep = 0.02;
 float CRCoeff= 1.0;
+string projectileFile = "box_tri.mesh";
+string dataPath = "../data";
+float projectileDensity = 2.5;
 
 Scene scene;
 
@@ -168,16 +171,29 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
       cout<<"Simulation paused"<<endl;
     return true;
   }
-  
+
   if (key == 'S')
   {
-    if (!viewer.core.is_animating){
-      scene.updateScene(timeStep, CRCoeff);
-      currTime+=timeStep;
-      updateMeshes(viewer);
-      std::cout <<"currTime: "<<currTime<<std::endl;
-      return true;
-    }
+	  if (!viewer.core.is_animating) {
+		  scene.updateScene(timeStep, CRCoeff);
+		  currTime += timeStep;
+		  updateMeshes(viewer);
+		  std::cout << "currTime: " << currTime << std::endl;
+		  return true;
+	  }
+  }
+
+  if (key == 'C')
+  {
+	  if (scene.catapult.aiming) scene.catapult.shoot();
+	  else if (scene.catapult.projectile == NULL) {
+		  MatrixXi objT, objF;
+		  MatrixXd objV;
+		  igl::readMESH(dataPath + std::string("/") + projectileFile, objV, objT, objF);
+		  scene.addMesh(objV, objF.rowwise().reverse(), objT, projectileDensity, 0, Vector3d(0, 40, 0), RowVector4d(0, 1, 0, 0));
+		  viewer.append_mesh();
+		  scene.catapult.fill(&scene.meshes.back());
+	  }
   }
   return false;
 }
@@ -187,18 +203,28 @@ bool key_down(igl::opengl::glfw::Viewer &viewer, unsigned char key, int modifier
 
 bool pre_draw(igl::opengl::glfw::Viewer &viewer)
 {
-  using namespace Eigen;
-  using namespace std;
-  
-  if (viewer.core.is_animating){
-    scene.updateScene(timeStep, CRCoeff);
-    currTime+=timeStep;
-    //cout <<"currTime: "<<currTime<<endl;
-    updateMeshes(viewer);
-  }
- 
-  
-  return false;
+	using namespace Eigen;
+	using namespace std;
+
+	if (viewer.core.is_animating) {
+		scene.updateScene(timeStep, CRCoeff);
+		currTime += timeStep;
+		//cout <<"currTime: "<<currTime<<endl;
+		updateMeshes(viewer);
+	}
+
+	//cout << "scene.catapult.corners" << endl << scene.catapult.corners << endl << "scene.catapult.stretchPoint" << endl << scene.catapult.stretchPoint << endl;
+	viewer.data().add_edges(scene.catapult.corners, scene.catapult.stretchPoint.replicate(4,1), Eigen::RowVector3d(0, 0, 255));
+
+	return false;
+}
+
+bool post_draw(igl::opengl::glfw::Viewer &viewer)
+{
+	using namespace Eigen;
+	using namespace std;
+
+	return false;
 }
 
 class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
@@ -214,6 +240,17 @@ class CustomMenu : public igl::opengl::glfw::imgui::ImGuiMenu
     {
       ImGui::InputFloat("CR Coeff",&CRCoeff,0,0,3);
       ImGui::InputFloat("Drag Coeff",&dragCoeff,0,0,3);
+      ImGui::InputFloat("Friction Coeff",&frictionCoeff,0,0,3);
+      ImGui::InputDouble("A.x",&scene.catapult.stretchPoint(0));
+      ImGui::InputDouble("A.y",&scene.catapult.stretchPoint(1));
+      ImGui::InputDouble("A.z",&scene.catapult.stretchPoint(2));
+	  ImGui::InputText("Data Path", dataPath);
+	  ImGui::InputText("Projectile Mesh", projectileFile);
+	  ImGui::InputFloat("Projectile Density", &projectileDensity, 0, 0, 3);
+	  ImGui::InputFloat("Rest Length 1", &scene.catapult.restLength1, 0, 0, 3);
+	  ImGui::InputFloat("Rest Length 2", &scene.catapult.restLength2, 0, 0, 3);
+	  ImGui::InputFloat("Stifness 1", &scene.catapult.K1, 0, 0, 3);
+	  ImGui::InputFloat("Stifness 2", &scene.catapult.K2, 0, 0, 3);
       
       
       if (ImGui::InputFloat("Time Step", &timeStep)) {
@@ -257,8 +294,8 @@ int main(int argc, char *argv[])
   }
   //mgpViewer.core.align_camera_center(scene.meshes[0].currV);
   
-  
   mgpViewer.callback_pre_draw = &pre_draw;
+  mgpViewer.callback_post_draw = &post_draw;
   mgpViewer.callback_key_down = &key_down;
   mgpViewer.core.is_animating = false;
   mgpViewer.core.animation_max_fps = 50.;
