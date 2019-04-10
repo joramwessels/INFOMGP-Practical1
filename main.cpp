@@ -239,7 +239,8 @@ int main(int argc, char *argv[])
   cout<<"scene file: "<<std::string(argv[2])<<endl;
   //create platform
   //createPlatform();
-  createPoolTable(Eigen::Vector3d(0.0, 0.0, 0.0));
+  double thickness = 5.0;
+  createPoolTable(Eigen::Vector3d(0.0, 0.0 - thickness, 0.0), 100.0, 200.0, thickness);
   for (int i = 0; i < platV.size(); i++)
 	scene.addMesh(platV[i], boxF, boxT, 10000.0, true, platCOM[i], boxOrientation, platColor[i]);
   
